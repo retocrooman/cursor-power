@@ -22,3 +22,4 @@
 - GitHub Actions 連携（CI から子エージェント起動）
 - Cursor Rule との統合（プロジェクトごとのカスタマイズ）
 - Web UI でのタスク管理
+- worktree 作成前に main ブランチを pull して最新にする仕組みの検討（並行 PR マージ時に diff が「変更を元に戻している」ように見える問題の防止）
