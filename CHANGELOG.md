@@ -4,6 +4,8 @@
 
 ### Features
 
+- add interactive walkthrough command `/tutorial` for new users (#17)
+- add `draftPR` option to create PRs in draft state (#16)
 - add /task-plan command for interactive spec planning (#7)
 - add /task-config command for interactive config editing (#9)
 - add issue management commands /issue-add and /issue-list (#12)
@@ -14,6 +16,10 @@
 - implement Phase 3 — task cleanup with /task-clean
 - background worker execution with detached spawn
 - implement Phase 1 — task add, list, status with worker orchestration
+
+### Performance
+
+- split check-status into sync and async phases for faster response (#18)
 
 ### Bug Fixes
 
@@ -28,6 +34,7 @@
 
 ### Documentation
 
+- sync all markdown files with current implementation (#15)
 - update README with /task-plan and /task-review commands (#8)
 - update TODO.md to reflect current implementation status (#10)
 - add contribution section to README

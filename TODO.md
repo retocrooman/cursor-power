@@ -14,3 +14,6 @@
 - プランニングフロー（`/task-plan`）
 - 対話的な設定変更（`/task-config` — モデル一覧取得、複数キー同時変更）
 - Issue 管理（`/issue-add`, `/issue-list` — 軽量なアイデア・メモ記録）
+- `draftPR` 設定オプション（`/task-config` で `draftPR=true` に設定すると PR をドラフト状態で作成）
+- 対話型チュートリアル（`/tutorial` — ダミータスクで一通りのフローを体験）
+- ステータス確認の高速化（`check-status.mjs` を同期表示と非同期更新に分離）
