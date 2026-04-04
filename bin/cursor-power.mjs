@@ -27,6 +27,7 @@ function install() {
   const tasksDir = join(powerDir, "tasks");
   const questionsDir = join(powerDir, "questions");
   const logsDir = join(powerDir, "logs");
+  const plansDir = join(powerDir, "plans");
   const configPath = join(powerDir, "config.json");
 
   mkdirSync(commandsDir, { recursive: true });
@@ -34,6 +35,7 @@ function install() {
   mkdirSync(tasksDir, { recursive: true });
   mkdirSync(questionsDir, { recursive: true });
   mkdirSync(logsDir, { recursive: true });
+  mkdirSync(plansDir, { recursive: true });
 
   cpSync(join(pkgRoot, "commands"), commandsDir, {
     recursive: true,

@@ -3,19 +3,26 @@ import { randomUUID } from "node:crypto";
 import { writeFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH } from "./paths.mjs";
+import { TASKS_DIR, CONFIG_PATH, PLANS_DIR } from "./paths.mjs";
 
 const { values } = parseArgs({
   options: {
     prompt: { type: "string" },
+    plan: { type: "string" },
     repo: { type: "string" },
     base: { type: "string", default: "main" },
     model: { type: "string" },
   },
 });
 
-if (!values.prompt || !values.repo) {
-  console.error(JSON.stringify({ error: "--prompt and --repo are required" }));
+let prompt = values.prompt;
+if (values.plan) {
+  const planPath = join(PLANS_DIR, `${values.plan}.md`);
+  prompt = readFileSync(planPath, "utf-8");
+}
+
+if (!prompt || !values.repo) {
+  console.error(JSON.stringify({ error: "--prompt (or --plan) and --repo are required" }));
   process.exit(1);
 }
 
@@ -41,7 +48,8 @@ const now = new Date().toISOString();
 const task = {
   id,
   status: activeCount >= maxConcurrency ? "pending" : "pending",
-  prompt: values.prompt,
+  prompt,
+  planId: values.plan || null,
   sessionId: null,
   repoPath: values.repo,
   branch: `task-${id}`,
