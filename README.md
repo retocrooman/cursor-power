@@ -141,3 +141,7 @@ Agent: マージ済み worktree を削除:
 ## ライセンス
 
 MIT
+
+## MVP検証中
+
+このセクションはcursor-powerのMVP検証のために自動生成されました。
