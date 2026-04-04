@@ -1,0 +1,19 @@
+{
+  "name": "cursor-power",
+  "version": "0.1.0",
+  "description": "Minimal orchestration layer for parallel Cursor Agent workers",
+  "type": "module",
+  "bin": {
+    "cursor-power": "./bin/cursor-power.mjs"
+  },
+  "files": [
+    "bin/",
+    "commands/",
+    "scripts/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/retocrooman/cursor-power.git"
+  },
+  "license": "MIT"
+}
