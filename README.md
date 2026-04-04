@@ -151,7 +151,8 @@ Agent: マージ済み worktree を削除:
 ```json
 {
   "defaultModel": "sonnet-4",
-  "maxConcurrency": 3
+  "maxConcurrency": 3,
+  "draftPR": false
 }
 ```
 
@@ -159,6 +160,7 @@ Agent: マージ済み worktree を削除:
 |------|----|-----------|------|
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
+| `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 
 ## ディレクトリ構成
 

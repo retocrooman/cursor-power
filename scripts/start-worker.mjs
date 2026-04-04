@@ -22,14 +22,16 @@ const taskPath = join(TASKS_DIR, `${taskId}.json`);
 const task = JSON.parse(readFileSync(taskPath, "utf-8"));
 
 let defaultModel = "sonnet-4";
+let draftPR = false;
 try {
   const config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
   if (config.defaultModel) defaultModel = config.defaultModel;
+  if (config.draftPR === true) draftPR = true;
 } catch {}
 
 const model = task.model || defaultModel;
 
-const fullPrompt = buildInitialPrompt(taskId, task.prompt);
+const fullPrompt = buildInitialPrompt(taskId, task.prompt, { draftPR });
 
 const args = [
   "--print",
