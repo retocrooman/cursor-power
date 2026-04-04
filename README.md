@@ -41,26 +41,53 @@ Cursor の Agent tab で `/` に続けて入力する。
 
 | コマンド | 説明 |
 |----------|------|
-| `/task-add <説明>` | 対話で詰めた要件をタスクとして登録し、子エージェントを自動起動 |
+| `/task-plan` | 対話で仕様を詰めてからタスクを登録・起動（推奨） |
+| `/task-add <説明>` | 簡易的なタスク登録・子エージェント自動起動 |
 | `/task-list` | 全タスクの一覧を表示 |
 | `/task-status` | 各子エージェントの進捗・状態を確認 |
 | `/task-check` | 子エージェントからの質問を確認し、回答を中継 |
+| `/task-review [タスクID]` | タスクのPRをレビューし、修正指示を送信 |
 | `/task-clean` | マージ済みブランチの worktree を削除 |
 
 ## 基本的な使い方
 
-### 1. 対話でタスクを定義
+### 1. 仕様を詰めてタスクを計画
 
 ```
-ユーザー: ログイン画面を実装したい。メールとパスワードでOK。
+ユーザー: /task-plan
 
-Agent: 了解です。バリデーションはどうしますか？...
-       （対話で要件を詰める）
+Agent: 以下の項目をお聞かせください:
+  - 背景: なぜこの変更が必要か
+  - 目的: 何を実現したいか
+  - 対象ファイル/ディレクトリ: 変更が必要な場所
+  - ベースブランチ: どのブランチから分岐するか
 
-ユーザー: /task-add メール・パスワードによるログイン画面の実装
+ユーザー: 背景: ユーザー認証機能がない
+        目的: メール・パスワードによるログイン画面を実装
+        対象: src/components/auth/ に新規作成
+        ベース: main
+
+Agent: 仕様をまとめました:
+       ## 背景
+       ユーザー認証機能がない
+       
+       ## 目的  
+       メール・パスワードによるログイン画面を実装
+       
+       ## 対象ファイル/ディレクトリ
+       src/components/auth/ に新規作成
+       
+       ## ベースブランチ
+       main
+       
+       この内容で進めてよろしいですか？
+
+ユーザー: はい
+
+Agent: タスク task-a1b2 を開始しました
 ```
 
-### 2. 状態を確認
+### 2. 進捗を確認
 
 ```
 ユーザー: /task-status
@@ -70,7 +97,7 @@ Agent: タスク一覧:
   task-c3d4: API認証     [blocked] — 質問あり
 ```
 
-### 3. 子の質問に回答
+### 3. 子エージェントの質問に回答
 
 ```
 ユーザー: /task-check
@@ -83,7 +110,30 @@ Agent: task-c3d4 から質問:
 Agent: task-c3d4 に回答を送信しました。
 ```
 
-### 4. 完了後のクリーンアップ
+### 4. PRをレビュー
+
+```
+ユーザー: /task-review task-a1b2
+
+Agent: タスク task-a1b2 のレビュー (PR: https://github.com/user/repo/pull/42)
+       
+       変更ファイル:
+         1. src/components/auth/LoginForm.tsx
+         2. src/components/auth/index.ts
+         3. src/styles/auth.css
+       
+       見たいファイルを選んでください（番号またはファイル名）。
+
+ユーザー: 1
+
+Agent: （LoginForm.tsx の diff をエディタで表示）
+
+ユーザー: バリデーションエラーの表示が不十分です。各フィールドの下にエラーメッセージを表示してください。
+
+Agent: 修正指示を task-a1b2 に送信しました。
+```
+
+### 5. 完了後のクリーンアップ
 
 ```
 ユーザー: /task-clean
@@ -112,10 +162,12 @@ Agent: マージ済み worktree を削除:
 
 ```
 ~/.cursor/commands/          # Cursor グローバルコマンド
+  task-plan.md
   task-add.md
   task-list.md
   task-status.md
   task-check.md
+  task-review.md
   task-clean.md
 
 ~/.cursor-power/             # 状態管理・スクリプト
