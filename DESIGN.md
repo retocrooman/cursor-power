@@ -94,29 +94,48 @@ flowchart TB
 
 ```
 ~/.cursor/commands/              # Cursor グローバルコマンド（インストーラーが配置）
-  task-add.md
-  task-list.md
-  task-status.md
-  task-check.md
-  task-clean.md
+  task-plan.md                   # 対話的な仕様策定・タスク起動
+  task-add.md                    # 簡易タスク登録
+  task-list.md                   # タスク一覧表示
+  task-status.md                 # ステータス確認
+  task-check.md                  # 質問確認・回答
+  task-review.md                 # PR レビュー
+  task-clean.md                  # worktree クリーンアップ
+  task-config.md                 # 設定変更
+  issue-add.md                   # issue 登録
+  issue-list.md                  # issue 一覧
+  tutorial.md                    # 対話型ウォークスルー
 
 ~/.cursor-power/                 # グローバル状態管理
   config.json                    # 設定
+  issues.json                    # issue メモ
   tasks/                         # タスク状態
     <task-id>.json
   questions/                     # 子からの質問
     <task-id>.json
+  logs/                          # 子エージェントのログ
+    <task-id>.log
+  plans/                         # /task-plan で保存した仕様
+    <plan-id>.md
   scripts/                       # Node.js ヘルパースクリプト
+    paths.mjs                    # 共通パス定義
+    prompt.mjs                   # 子エージェントへのプロンプト生成
     add-task.mjs                 # タスク登録
-    list-tasks.mjs               # タスク一覧
-    check-status.mjs             # ステータス確認
-    check-questions.mjs          # 質問確認
-    clean-worktrees.mjs          # worktree クリーンアップ
     start-worker.mjs             # 子エージェント起動
+    list-tasks.mjs               # タスク一覧
+    check-status.mjs             # ステータス確認（同期表示 + 非同期更新起動）
+    sync-status.mjs              # バックグラウンドでタスク状態を同期
+    check-questions.mjs          # 質問確認・回答書き込み
+    send-answer.mjs              # 子エージェントに回答を中継（resume）
+    clean-worktrees.mjs          # worktree クリーンアップ
+    review-pr.mjs                # PR レビュー（ファイル一覧・diff）
+    save-plan.mjs                # 仕様保存
+    update-config.mjs            # 設定変更
+    manage-issues.mjs            # issue 管理
 
 ~/.cursor/worktrees/             # agent CLI が自動管理する worktree
   <repo-name>/
-    <task-id>/
+    task-<task-id>/
 ```
 
 ## タスクライフサイクル
@@ -151,13 +170,16 @@ stateDiagram-v2
   "id": "a1b2c3d4",
   "status": "running",
   "prompt": "メール・パスワードによるログイン画面の実装",
+  "planId": "e5f6g7h8",
   "sessionId": "aa04a7c8-473c-4b31-a67c-35f3f2b4a447",
   "repoPath": "/Users/shiho/Github/myproject",
   "branch": "task-a1b2c3d4",
   "baseBranch": "main",
   "model": "sonnet-4",
   "prUrl": null,
-  "worktreePath": "~/.cursor/worktrees/myproject/task-a1b2c3d4",
+  "worktreePath": null,
+  "pid": 12345,
+  "logPath": "~/.cursor-power/logs/a1b2c3d4.log",
   "createdAt": "2026-04-04T10:00:00.000Z",
   "updatedAt": "2026-04-04T10:05:00.000Z"
 }
@@ -168,13 +190,16 @@ stateDiagram-v2
 | `id` | string | 8文字の短縮 UUID |
 | `status` | enum | `pending`, `running`, `blocked`, `pr_created`, `done`, `failed` |
 | `prompt` | string | 子エージェントに渡すプロンプト |
+| `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
 | `repoPath` | string | 対象リポジトリの絶対パス |
-| `branch` | string | 作業ブランチ名 |
+| `branch` | string | 作業ブランチ名（`task-<id>`） |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `prUrl` | string \| null | 作成された PR の URL |
 | `worktreePath` | string \| null | worktree のパス |
+| `pid` | number \| null | 子エージェントプロセスの PID |
+| `logPath` | string \| null | ログファイルのパス |
 | `createdAt` | string | 作成日時（ISO 8601） |
 | `updatedAt` | string | 最終更新日時（ISO 8601） |
 
@@ -198,12 +223,31 @@ stateDiagram-v2
 | `answer` | string \| null | 親経由のユーザー回答 |
 | `answeredAt` | string \| null | 回答日時 |
 
+### Issue JSON (`~/.cursor-power/issues.json`)
+
+```json
+[
+  {
+    "id": 1,
+    "text": "ログイン画面の UX を改善したい",
+    "createdAt": "2026-04-04T10:00:00.000Z"
+  }
+]
+```
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| `id` | number | 連番の ID |
+| `text` | string | issue の内容 |
+| `createdAt` | string | 作成日時（ISO 8601） |
+
 ### 設定 JSON (`~/.cursor-power/config.json`)
 
 ```json
 {
   "defaultModel": "sonnet-4",
-  "maxConcurrency": 3
+  "maxConcurrency": 3,
+  "draftPR": false
 }
 ```
 
@@ -211,6 +255,7 @@ stateDiagram-v2
 |-----------|-----|-----------|------|
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
+| `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 
 ## コマンド別処理フロー
 
@@ -252,20 +297,25 @@ sequenceDiagram
 
 ### `/task-status`
 
+check-status.mjs は同期フェーズ（即座にタスク JSON を読み取ってレスポンス）と非同期フェーズ（sync-status.mjs をバックグラウンドで起動して PID 確認・ログ解析・PR 状態を更新）に分離されている。
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
   participant P as 親 Agent tab
   participant S as check-status.mjs
+  participant BG as sync-status.mjs
   participant G as git / gh
 
   U->>P: /task-status
   P->>S: node check-status.mjs
-  S->>S: タスク JSON 読み取り
-  S->>G: ブランチの最新 commit 確認
-  S->>G: PR 状態確認（あれば）
-  S-->>P: 詳細ステータス JSON
+  S->>S: タスク JSON 読み取り（同期）
+  S-->>P: 詳細ステータス JSON（即座に返却）
+  S->>BG: バックグラウンドで起動（detached）
   P->>U: 各タスクの進捗を表示
+  BG->>BG: PID 存在チェック・ログ解析
+  BG->>G: gh pr view で PR 状態確認
+  BG->>BG: タスク JSON を更新
 ```
 
 ### `/task-check`
@@ -299,32 +349,143 @@ sequenceDiagram
 
   U->>P: /task-clean
   P->>S: node clean-worktrees.mjs
-  S->>S: pr_created ステータスのタスクを取得
-  S->>G: gh pr view で各 PR のマージ状態確認
-  S->>G: マージ済みの worktree を git worktree remove
-  S->>S: タスク JSON 更新（status: done）
+  S->>S: pr_created / done ステータスのタスクを取得
+  S->>G: gh pr view で各 PR の状態確認
+  S->>G: マージ済み or クローズ済みの worktree を git worktree remove
+  S->>S: マージ済み → status: done / クローズ済み → タスク JSON 削除
   S-->>P: 削除結果
   P->>U: 削除した worktree 一覧を表示
 ```
 
+### `/task-plan`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant SP as save-plan.mjs
+  participant SA as add-task.mjs
+  participant W as start-worker.mjs
+  participant C as 子 agent CLI
+
+  U->>P: /task-plan
+  P->>U: 背景・目的・対象ファイル・ベースブランチを質問
+  U->>P: 仕様を回答
+  P->>U: 仕様をまとめて確認を求める
+  U->>P: 承認
+  P->>SP: node save-plan.mjs --content "..."
+  SP-->>P: プラン ID 返却
+  P->>SA: node add-task.mjs --plan <planId> --repo /path --base main
+  SA-->>P: タスク ID 返却
+  P->>W: node start-worker.mjs --task-id <taskId>
+  W->>C: agent --print --yolo --worktree ...
+  W-->>P: PID 返却
+  P->>U: タスク <id> を開始しました
+```
+
+### `/task-review [タスクID]`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as review-pr.mjs
+  participant A as send-answer.mjs
+
+  U->>P: /task-review task-a1b2
+  P->>S: node review-pr.mjs --task-id a1b2
+  S-->>P: changedFiles（diffStat 付き、自動生成ファイル除外）
+  P->>U: ファイル一覧を表示（+N / -N, 新規判定）
+  U->>P: ファイル番号を選択
+  P->>S: node review-pr.mjs --task-id a1b2 --action diff --file <path>
+  S-->>P: エディタで diff を表示
+  U->>P: 修正指示
+  P->>A: node send-answer.mjs --task-id a1b2 --answer "修正指示"
+  P->>U: 修正指示を送信しました
+```
+
+### `/task-config`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as update-config.mjs
+
+  U->>P: /task-config
+  P->>S: node update-config.mjs
+  S-->>P: 現在の設定 JSON
+  P->>U: 設定一覧を表示
+  U->>P: defaultModel を変更したい
+  P->>S: node update-config.mjs --list-models
+  S-->>P: モデル一覧
+  P->>U: モデル一覧を表示
+  U->>P: opus-4 にして
+  P->>S: node update-config.mjs --set defaultModel=opus-4
+  S-->>P: 更新後の設定
+  P->>U: 設定を更新しました
+```
+
+### `/issue-add <メモ>`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as manage-issues.mjs
+
+  U->>P: /issue-add ログイン画面のUXを改善したい
+  P->>S: node manage-issues.mjs --add "ログイン画面のUXを改善したい"
+  S-->>P: issue JSON（id 付き）
+  P->>U: Issue #1 を登録しました
+```
+
+### `/issue-list`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as manage-issues.mjs
+
+  U->>P: /issue-list
+  P->>S: node manage-issues.mjs --list
+  S-->>P: issue 一覧 JSON
+  P->>U: 番号付きリストで表示
+```
+
 ## 子エージェントへのプロンプト設計
 
-子エージェントに渡すプロンプトは、ユーザーが対話で決めた内容をベースに、最小限のシステム指示を付加する。
+子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（Git 操作手順、質問フロー、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
 
 ```
 {ユーザーが対話で決めたプロンプト}
 
 ---
-質問がある場合は ~/.cursor-power/questions/{task-id}.json に以下の形式で書いてください:
-{
-  "taskId": "{task-id}",
-  "question": "質問内容",
-  "askedAt": "ISO 8601 日時"
-}
-質問を書いたら作業を中断し、回答を待ってください。
+## 作業ルール
 
-完了したら gh pr create でPRを作成してください。
+### Git 操作
+- 作業は必ず現在の worktree 内で行うこと。他のディレクトリに移動しない。
+- 作業が完了したら以下を順番に実行:
+  1. git add で変更をステージ
+  2. git commit（Conventional Commits 形式）
+  3. git push -u origin HEAD
+  4. gh pr create --base {baseBranch} でPRを作成
+
+### 質問
+- 判断に迷ったり、仕様が不明確な場合は必ず質問すること。
+- 質問は ~/.cursor-power/questions/{task-id}.json に以下の形式で書く:
+  { "taskId": "{task-id}", "question": "質問内容", "askedAt": "ISO 8601 日時" }
+- 質問ファイルを書いたら作業を中断し、回答を待つ。
+
+### 禁止事項
+- main ブランチへの直接 push
+- force push
+- worktree 外のファイルの変更
+- 質問なしで曖昧な仕様を推測して実装すること
 ```
+
+回答中継時は `buildResumePrompt()` で簡潔なプロンプトを生成し、`agent --resume <session_id>` で子セッションに送信する。
 
 子エージェントにはレポのコンテキストやアーキテクチャ情報は渡さない。`--workspace` で対象レポを指定するため、子エージェント自身がコードベースを探索して理解する。
 
