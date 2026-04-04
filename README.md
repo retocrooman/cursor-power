@@ -138,6 +138,10 @@ Agent: マージ済み worktree を削除:
 - [DESIGN.md](DESIGN.md) — アーキテクチャ・設計思想
 - [TODO.md](TODO.md) — 実装ロードマップ
 
+## コントリビューション
+
+Issueやプルリクエストを歓迎します。
+
 ## ライセンス
 
 MIT
