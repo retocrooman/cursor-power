@@ -94,29 +94,46 @@ flowchart TB
 
 ```
 ~/.cursor/commands/              # Cursor グローバルコマンド（インストーラーが配置）
-  task-add.md
-  task-list.md
-  task-status.md
-  task-check.md
-  task-clean.md
+  task-plan.md                   # 対話的な仕様策定・タスク起動
+  task-add.md                    # 簡易タスク登録
+  task-list.md                   # タスク一覧表示
+  task-status.md                 # ステータス確認
+  task-check.md                  # 質問確認・回答
+  task-review.md                 # PR レビュー
+  task-clean.md                  # worktree クリーンアップ
+  task-config.md                 # 設定変更
+  issue-add.md                   # issue 登録
+  issue-list.md                  # issue 一覧
 
 ~/.cursor-power/                 # グローバル状態管理
   config.json                    # 設定
+  issues.json                    # issue メモ
   tasks/                         # タスク状態
     <task-id>.json
   questions/                     # 子からの質問
     <task-id>.json
+  logs/                          # 子エージェントのログ
+    <task-id>.log
+  plans/                         # /task-plan で保存した仕様
+    <plan-id>.md
   scripts/                       # Node.js ヘルパースクリプト
+    paths.mjs                    # 共通パス定義
+    prompt.mjs                   # 子エージェントへのプロンプト生成
     add-task.mjs                 # タスク登録
+    start-worker.mjs             # 子エージェント起動
     list-tasks.mjs               # タスク一覧
     check-status.mjs             # ステータス確認
-    check-questions.mjs          # 質問確認
+    check-questions.mjs          # 質問確認・回答書き込み
+    send-answer.mjs              # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs          # worktree クリーンアップ
-    start-worker.mjs             # 子エージェント起動
+    review-pr.mjs                # PR レビュー（ファイル一覧・diff）
+    save-plan.mjs                # 仕様保存
+    update-config.mjs            # 設定変更
+    manage-issues.mjs            # issue 管理
 
 ~/.cursor/worktrees/             # agent CLI が自動管理する worktree
   <repo-name>/
-    <task-id>/
+    task-<task-id>/
 ```
 
 ## タスクライフサイクル
@@ -151,13 +168,16 @@ stateDiagram-v2
   "id": "a1b2c3d4",
   "status": "running",
   "prompt": "メール・パスワードによるログイン画面の実装",
+  "planId": "e5f6g7h8",
   "sessionId": "aa04a7c8-473c-4b31-a67c-35f3f2b4a447",
   "repoPath": "/Users/shiho/Github/myproject",
   "branch": "task-a1b2c3d4",
   "baseBranch": "main",
   "model": "sonnet-4",
   "prUrl": null,
-  "worktreePath": "~/.cursor/worktrees/myproject/task-a1b2c3d4",
+  "worktreePath": null,
+  "pid": 12345,
+  "logPath": "~/.cursor-power/logs/a1b2c3d4.log",
   "createdAt": "2026-04-04T10:00:00.000Z",
   "updatedAt": "2026-04-04T10:05:00.000Z"
 }
@@ -168,13 +188,16 @@ stateDiagram-v2
 | `id` | string | 8文字の短縮 UUID |
 | `status` | enum | `pending`, `running`, `blocked`, `pr_created`, `done`, `failed` |
 | `prompt` | string | 子エージェントに渡すプロンプト |
+| `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
 | `repoPath` | string | 対象リポジトリの絶対パス |
-| `branch` | string | 作業ブランチ名 |
+| `branch` | string | 作業ブランチ名（`task-<id>`） |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `prUrl` | string \| null | 作成された PR の URL |
 | `worktreePath` | string \| null | worktree のパス |
+| `pid` | number \| null | 子エージェントプロセスの PID |
+| `logPath` | string \| null | ログファイルのパス |
 | `createdAt` | string | 作成日時（ISO 8601） |
 | `updatedAt` | string | 最終更新日時（ISO 8601） |
 
@@ -197,6 +220,24 @@ stateDiagram-v2
 | `askedAt` | string | 質問日時 |
 | `answer` | string \| null | 親経由のユーザー回答 |
 | `answeredAt` | string \| null | 回答日時 |
+
+### Issue JSON (`~/.cursor-power/issues.json`)
+
+```json
+[
+  {
+    "id": 1,
+    "text": "ログイン画面の UX を改善したい",
+    "createdAt": "2026-04-04T10:00:00.000Z"
+  }
+]
+```
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| `id` | number | 連番の ID |
+| `text` | string | issue の内容 |
+| `createdAt` | string | 作成日時（ISO 8601） |
 
 ### 設定 JSON (`~/.cursor-power/config.json`)
 
@@ -299,12 +340,109 @@ sequenceDiagram
 
   U->>P: /task-clean
   P->>S: node clean-worktrees.mjs
-  S->>S: pr_created ステータスのタスクを取得
-  S->>G: gh pr view で各 PR のマージ状態確認
-  S->>G: マージ済みの worktree を git worktree remove
-  S->>S: タスク JSON 更新（status: done）
+  S->>S: pr_created / done ステータスのタスクを取得
+  S->>G: gh pr view で各 PR の状態確認
+  S->>G: マージ済み or クローズ済みの worktree を git worktree remove
+  S->>S: マージ済み → status: done / クローズ済み → タスク JSON 削除
   S-->>P: 削除結果
   P->>U: 削除した worktree 一覧を表示
+```
+
+### `/task-plan`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant SP as save-plan.mjs
+  participant SA as add-task.mjs
+  participant W as start-worker.mjs
+  participant C as 子 agent CLI
+
+  U->>P: /task-plan
+  P->>U: 背景・目的・対象ファイル・ベースブランチを質問
+  U->>P: 仕様を回答
+  P->>U: 仕様をまとめて確認を求める
+  U->>P: 承認
+  P->>SP: node save-plan.mjs --content "..."
+  SP-->>P: プラン ID 返却
+  P->>SA: node add-task.mjs --plan <planId> --repo /path --base main
+  SA-->>P: タスク ID 返却
+  P->>W: node start-worker.mjs --task-id <taskId>
+  W->>C: agent --print --yolo --worktree ...
+  W-->>P: PID 返却
+  P->>U: タスク <id> を開始しました
+```
+
+### `/task-review [タスクID]`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as review-pr.mjs
+  participant A as send-answer.mjs
+
+  U->>P: /task-review task-a1b2
+  P->>S: node review-pr.mjs --task-id a1b2
+  S-->>P: changedFiles（diffStat 付き、自動生成ファイル除外）
+  P->>U: ファイル一覧を表示（+N / -N, 新規判定）
+  U->>P: ファイル番号を選択
+  P->>S: node review-pr.mjs --task-id a1b2 --action diff --file <path>
+  S-->>P: エディタで diff を表示
+  U->>P: 修正指示
+  P->>A: node send-answer.mjs --task-id a1b2 --answer "修正指示"
+  P->>U: 修正指示を送信しました
+```
+
+### `/task-config`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as update-config.mjs
+
+  U->>P: /task-config
+  P->>S: node update-config.mjs
+  S-->>P: 現在の設定 JSON
+  P->>U: 設定一覧を表示
+  U->>P: defaultModel を変更したい
+  P->>S: node update-config.mjs --list-models
+  S-->>P: モデル一覧
+  P->>U: モデル一覧を表示
+  U->>P: opus-4 にして
+  P->>S: node update-config.mjs --set defaultModel=opus-4
+  S-->>P: 更新後の設定
+  P->>U: 設定を更新しました
+```
+
+### `/issue-add <メモ>`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as manage-issues.mjs
+
+  U->>P: /issue-add ログイン画面のUXを改善したい
+  P->>S: node manage-issues.mjs --add "ログイン画面のUXを改善したい"
+  S-->>P: issue JSON（id 付き）
+  P->>U: Issue #1 を登録しました
+```
+
+### `/issue-list`
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant S as manage-issues.mjs
+
+  U->>P: /issue-list
+  P->>S: node manage-issues.mjs --list
+  S-->>P: issue 一覧 JSON
+  P->>U: 番号付きリストで表示
 ```
 
 ## 子エージェントへのプロンプト設計

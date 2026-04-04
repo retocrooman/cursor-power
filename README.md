@@ -46,8 +46,9 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/task-list` | 全タスクの一覧を表示 |
 | `/task-status` | 各子エージェントの進捗・状態を確認 |
 | `/task-check` | 子エージェントからの質問を確認し、回答を中継 |
-| `/task-review [タスクID]` | タスクのPRをレビューし、修正指示を送信 |
-| `/task-clean` | マージ済みブランチの worktree を削除 |
+| `/task-review [タスクID]` | タスクのPRをレビュー（diffStat 付きファイル一覧、diff 表示、修正指示送信） |
+| `/task-clean` | マージ済み・クローズ済みPRの worktree を削除 |
+| `/task-config` | 設定を対話的に変更（モデル、同時実行数など） |
 | `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
 | `/issue-list` | 登録済み issue の一覧を表示 |
 
@@ -171,6 +172,7 @@ Agent: マージ済み worktree を削除:
   task-check.md
   task-review.md
   task-clean.md
+  task-config.md
   issue-add.md
   issue-list.md
 
@@ -181,33 +183,36 @@ Agent: マージ済み worktree を削除:
     <task-id>.json
   questions/                 # 子からの質問
     <task-id>.json
+  logs/                      # 子エージェントのログ
+    <task-id>.log
+  plans/                     # /task-plan で保存した仕様
+    <plan-id>.md
   scripts/                   # ヘルパースクリプト
-    add-task.mjs
-    list-tasks.mjs
-    check-status.mjs
-    check-questions.mjs
-    clean-worktrees.mjs
-    start-worker.mjs
-    manage-issues.mjs
+    paths.mjs                # 共通パス定義
+    prompt.mjs               # 子エージェントへのプロンプト生成
+    add-task.mjs             # タスク登録
+    start-worker.mjs         # 子エージェント起動
+    list-tasks.mjs           # タスク一覧
+    check-status.mjs         # ステータス確認
+    check-questions.mjs      # 質問確認・回答書き込み
+    send-answer.mjs          # 子エージェントに回答を中継（resume）
+    clean-worktrees.mjs      # worktree クリーンアップ
+    review-pr.mjs            # PR レビュー（ファイル一覧・diff）
+    save-plan.mjs            # 仕様保存
+    update-config.mjs        # 設定変更
+    manage-issues.mjs        # issue 管理
 ```
 
 ## 関連ドキュメント
 
 - [DESIGN.md](DESIGN.md) — アーキテクチャ・設計思想
 - [TODO.md](TODO.md) — 実装ロードマップ
+- [CHANGELOG.md](CHANGELOG.md) — 変更履歴
 
 ## コントリビューション
 
-Issueやプルリクエストを歓迎します。
+Issue やプルリクエストを歓迎します。
 
 ## ライセンス
 
 MIT
-
-## MVP検証中
-
-このセクションはcursor-powerのMVP検証のために自動生成されました。
-
-## Phase 3 テスト
-
-クリーンアップ機能のテストです。
