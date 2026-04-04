@@ -6,4 +6,5 @@ const home = homedir();
 export const POWER_DIR = join(home, ".cursor-power");
 export const TASKS_DIR = join(POWER_DIR, "tasks");
 export const QUESTIONS_DIR = join(POWER_DIR, "questions");
+export const LOGS_DIR = join(POWER_DIR, "logs");
 export const CONFIG_PATH = join(POWER_DIR, "config.json");

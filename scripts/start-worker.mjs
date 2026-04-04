@@ -1,9 +1,9 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync, mkdirSync, openSync } from "node:fs";
 import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH, QUESTIONS_DIR } from "./paths.mjs";
+import { TASKS_DIR, CONFIG_PATH, QUESTIONS_DIR, LOGS_DIR } from "./paths.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -43,8 +43,7 @@ const promptSuffix = `
 
 const fullPrompt = task.prompt + promptSuffix;
 
-const cmd = [
-  "agent",
+const args = [
   "--print",
   "--yolo",
   "--worktree",
@@ -57,52 +56,24 @@ const cmd = [
   task.repoPath,
   "--model",
   model,
-  JSON.stringify(fullPrompt),
-].join(" ");
+  fullPrompt,
+];
+
+mkdirSync(LOGS_DIR, { recursive: true });
+const logPath = join(LOGS_DIR, `${taskId}.log`);
+const logFd = openSync(logPath, "w");
+
+const child = spawn("agent", args, {
+  detached: true,
+  stdio: ["ignore", logFd, logFd],
+});
 
 task.status = "running";
+task.pid = child.pid;
+task.logPath = logPath;
 task.updatedAt = new Date().toISOString();
 writeFileSync(taskPath, JSON.stringify(task, null, 2));
 
-try {
-  const result = execSync(cmd, {
-    encoding: "utf-8",
-    timeout: 300_000,
-    maxBuffer: 10 * 1024 * 1024,
-  });
+child.unref();
 
-  const lines = result.trim().split("\n");
-  let jsonResult = null;
-  for (const line of lines) {
-    try {
-      const parsed = JSON.parse(line);
-      if (parsed.session_id) jsonResult = parsed;
-    } catch {}
-  }
-
-  if (jsonResult) {
-    task.sessionId = jsonResult.session_id;
-  }
-
-  const prMatch = result.match(
-    /https:\/\/github\.com\/[^\s"]+\/pull\/\d+/
-  );
-  if (prMatch) {
-    task.prUrl = prMatch[0];
-    task.status = "pr_created";
-  }
-
-  task.updatedAt = new Date().toISOString();
-  writeFileSync(taskPath, JSON.stringify(task, null, 2));
-
-  console.log(JSON.stringify(task));
-} catch (err) {
-  task.status = "failed";
-  task.updatedAt = new Date().toISOString();
-  writeFileSync(taskPath, JSON.stringify(task, null, 2));
-
-  console.error(
-    JSON.stringify({ error: err.message, taskId, status: "failed" })
-  );
-  process.exit(1);
-}
+console.log(JSON.stringify({ taskId, pid: child.pid, logPath }));
