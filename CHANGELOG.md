@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.3.0 (2026-04-04)
+
+### Features
+
+- **review:** show task summary from prompt on review start (#22)
+- **review:** show task summary from prompt on review start
+- **tutorial:** add interactive walkthrough command for new users (#17)
+- **config:** add draftPR option to create PRs in draft state (#16)
+- **review:** add diffStat to file listing and filter auto-generated files (#14)
+- **clean:** delete closed PR tasks during worktree cleanup (#13)
+- **issues:** add issue management commands for lightweight idea tracking (#12)
+- **config:** add /task-config command for interactive config editing (#9)
+- add /task-plan command for interactive spec planning
+
+### Bug Fixes
+
+- **prompt:** strengthen question-first rules to prevent speculative implementation (#21)
+- prevent parent agent from implementing tasks directly
+
+### Refactoring
+
+- simplify /task-plan template and auto-execute after approval
+
+### Documentation
+
+- sync all markdown files with current implementation (#19)
+- sync all markdown files with current implementation (#15)
+- **TODO:** remove future considerations section (#10)
+- update README with /task-plan and /task-review commands
+- update TODO.md to reflect current implementation status
+
+### Other
+
+- Merge pull request #22 from retocrooman/task-e9bd4720
+- **status:** split check-status into sync and async phases (#18)
+- Merge pull request #8 from retocrooman/task-6feb239e
+- Merge pull request #7 from retocrooman/task-e1820d59
+
 ## 0.2.0 (2026-04-04)
 
 ### Features
