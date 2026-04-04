@@ -17,6 +17,7 @@ const results = [];
 for (const task of tasks) {
   const result = { id: task.id, prUrl: task.prUrl, actions: [] };
 
+  let prState = null;
   if (task.prUrl) {
     try {
       const prJson = execSync(
@@ -24,8 +25,9 @@ for (const task of tasks) {
         { encoding: "utf-8" }
       );
       const pr = JSON.parse(prJson);
-      if (pr.state !== "MERGED") {
-        result.skipped = "PR not yet merged";
+      prState = pr.state;
+      if (prState !== "MERGED" && prState !== "CLOSED") {
+        result.skipped = "PR still open";
         results.push(result);
         continue;
       }
@@ -68,10 +70,16 @@ for (const task of tasks) {
     result.actions.push("log file deleted");
   }
 
-  task.status = "done";
-  task.updatedAt = new Date().toISOString();
-  writeFileSync(join(TASKS_DIR, `${task.id}.json`), JSON.stringify(task, null, 2));
-  result.actions.push("task marked done");
+  const taskPath = join(TASKS_DIR, `${task.id}.json`);
+  if (prState === "CLOSED") {
+    unlinkSync(taskPath);
+    result.actions.push("task JSON deleted (PR closed)");
+  } else {
+    task.status = "done";
+    task.updatedAt = new Date().toISOString();
+    writeFileSync(taskPath, JSON.stringify(task, null, 2));
+    result.actions.push("task marked done");
+  }
 
   results.push(result);
 }
