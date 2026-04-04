@@ -8,7 +8,9 @@
 node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 ```
 
-出力の changedFiles を番号付きリストで表示する。各ファイルには diffStat（additions, deletions, isNew）が付与されているので、それを元にファイルごとの変更内容を一言で説明する。
+出力にはタスクの prompt フィールドが含まれる。まず prompt の内容から「背景」「目的」「ベースブランチ」を読み取り、一文で要約して表示する（例: 「レビュー時にタスクの目的を表示するため、review-pr.mjs と task-review.md を更新（ベース: main）」）。
+
+次に changedFiles を番号付きリストで表示する。各ファイルには diffStat（additions, deletions, isNew）が付与されているので、それを元にファイルごとの変更内容を一言で説明する。
 
 - isNew が true なら「新規ファイル」と明記
 - additions / deletions の数値を「+N / -N」形式で表示
@@ -18,6 +20,8 @@ node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 
 ```
 タスク 765e84e0 のレビュー (PR: URL)
+
+概要: エントリポイントにルーティングを追加し、ヘルパー関数を新設（ベース: main）
 
 変更ファイル:
   1. src/index.ts (+12 / -3) — エントリポイントにルーティング追加

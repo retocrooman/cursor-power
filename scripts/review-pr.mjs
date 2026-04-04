@@ -146,6 +146,7 @@ if (action === "open") {
     prUrl: task.prUrl,
     branch: task.branch,
     baseBranch,
+    prompt: task.prompt,
     changedFiles,
   };
   console.log(JSON.stringify(info, null, 2));
