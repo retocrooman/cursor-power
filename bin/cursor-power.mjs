@@ -49,6 +49,14 @@ function install() {
   });
   console.log(`scripts  -> ${scriptsDir}`);
 
+  const issuesPath = join(powerDir, "issues.json");
+  if (!existsSync(issuesPath)) {
+    writeFileSync(issuesPath, "[]");
+    console.log(`issues   -> ${issuesPath}`);
+  } else {
+    console.log(`issues   -> ${issuesPath} (既存のため上書きなし)`);
+  }
+
   if (!existsSync(configPath)) {
     writeFileSync(
       configPath,
@@ -64,5 +72,6 @@ function install() {
   }
 
   console.log(`\ncursor-power v${pkg.version} インストール完了。`);
-  console.log("Agent tab で /task-add, /task-list, /task-status, /task-check, /task-review, /task-clean が使えます。");
+  console.log("Agent tab で /task-add, /task-list, /task-status, /task-check, /task-review, /task-clean,");
+  console.log("/issue-add, /issue-list が使えます。");
 }

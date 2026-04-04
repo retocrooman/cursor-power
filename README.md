@@ -48,6 +48,8 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/task-check` | 子エージェントからの質問を確認し、回答を中継 |
 | `/task-review [タスクID]` | タスクのPRをレビューし、修正指示を送信 |
 | `/task-clean` | マージ済みブランチの worktree を削除 |
+| `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
+| `/issue-list` | 登録済み issue の一覧を表示 |
 
 ## 基本的な使い方
 
@@ -169,9 +171,12 @@ Agent: マージ済み worktree を削除:
   task-check.md
   task-review.md
   task-clean.md
+  issue-add.md
+  issue-list.md
 
 ~/.cursor-power/             # 状態管理・スクリプト
   config.json                # グローバル設定
+  issues.json                # issue メモ
   tasks/                     # タスク状態 JSON
     <task-id>.json
   questions/                 # 子からの質問
@@ -183,6 +188,7 @@ Agent: マージ済み worktree を削除:
     check-questions.mjs
     clean-worktrees.mjs
     start-worker.mjs
+    manage-issues.mjs
 ```
 
 ## 関連ドキュメント
