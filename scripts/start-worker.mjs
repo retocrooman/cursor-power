@@ -50,7 +50,7 @@ const args = [
 ];
 
 try {
-  execSync("git fetch origin && git pull origin main", {
+  execSync(`git fetch origin && git pull origin ${task.baseBranch}`, {
     cwd: task.repoPath,
     stdio: "pipe",
     timeout: 30_000,
@@ -58,7 +58,7 @@ try {
 } catch (e) {
   console.error(
     JSON.stringify({
-      warning: "failed to update main branch",
+      warning: `failed to update ${task.baseBranch} branch`,
       taskId,
       message: e.message,
     }),
