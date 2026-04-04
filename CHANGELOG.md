@@ -4,6 +4,11 @@
 
 ### Features
 
+- add /task-plan command for interactive spec planning (#7)
+- add /task-config command for interactive config editing (#9)
+- add issue management commands /issue-add and /issue-list (#12)
+- add diffStat to file listing and filter auto-generated files in /task-review (#14)
+- delete closed PR tasks during worktree cleanup (#13)
 - add /release command for automated versioning and publishing
 - implement PR review flow with /task-review
 - implement Phase 3 — task cleanup with /task-clean
@@ -12,24 +17,24 @@
 
 ### Bug Fixes
 
+- prevent parent agent from implementing tasks directly
 - move /release command to project-local .cursor/commands
 
 ### Refactoring
 
+- simplify /task-plan template and auto-execute after approval
 - move release tooling into .cursor/ (gitignored)
 - centralize child agent prompts in prompt.mjs
 
 ### Documentation
 
-- add Phase 3 test section to README
+- update README with /task-plan and /task-review commands (#8)
+- update TODO.md to reflect current implementation status (#10)
 - add contribution section to README
 - add initial project documentation
 
 ### Other
 
 - finalize Phase 4 — npm package ready for global install
-- Merge pull request #5 from retocrooman/task-50aa595a
 - add gitignore for node_modules and .cursor
-- Merge pull request #1 from retocrooman/task-7d374442
-- add MVP verification section
 
