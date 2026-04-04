@@ -11,14 +11,18 @@
 
 ユーザーの回答を仕様としてまとめ、確認を求める。
 
-ユーザーが承認したら仕様を保存し、そのままタスク登録・子エージェント起動まで実行する:
+ユーザーが承認したら、まとめた仕様からブランチの `--type` と `--title` を自動判定する:
+- **type**: 仕様内容から適切なConventional Commits typeを判定する（feat, fix, refactor, docs, chore, test, ci, perf, style 等）
+- **title**: 仕様内容の要約をケバブケースで生成する（例: fix-concurrency-check, add-dark-mode）
+
+仕様を保存し、そのままタスク登録・子エージェント起動まで実行する:
 
 ```bash
 node ~/.cursor-power/scripts/save-plan.mjs --content "<まとめた仕様のmarkdown>"
 ```
 
 ```bash
-node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>"
+node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>" --type "<type>" --title "<title>"
 ```
 
 ```bash

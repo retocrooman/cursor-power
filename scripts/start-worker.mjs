@@ -37,7 +37,7 @@ const args = [
   "--print",
   "--yolo",
   "--worktree",
-  `task-${taskId}`,
+  task.branch,
   "--worktree-base",
   task.baseBranch,
   "--output-format",
