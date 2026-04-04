@@ -1,6 +1,10 @@
 import { QUESTIONS_DIR } from "./paths.mjs";
 
-export function buildInitialPrompt(taskId, userPrompt) {
+export function buildInitialPrompt(taskId, userPrompt, { draftPR = false } = {}) {
+  const ghPrCreateCmd = draftPR
+    ? `gh pr create --draft --base ${"{baseBranch}"}`
+    : `gh pr create --base ${"{baseBranch}"}`;
+
   return `${userPrompt}
 
 ---
@@ -12,7 +16,7 @@ export function buildInitialPrompt(taskId, userPrompt) {
   1. git add で変更をステージ
   2. git commit（Conventional Commits 形式）
   3. git push -u origin HEAD
-  4. gh pr create --base ${"{baseBranch}"} でPRを作成
+  4. ${ghPrCreateCmd} でPRを作成
 - PRのタイトルは Conventional Commits 形式にする。
 
 ### 質問

@@ -8,6 +8,7 @@ import { CONFIG_PATH, POWER_DIR } from "./paths.mjs";
 const DEFAULTS = {
   defaultModel: "sonnet-4",
   maxConcurrency: 3,
+  draftPR: false,
 };
 
 const { values } = parseArgs({
