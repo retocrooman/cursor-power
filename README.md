@@ -108,6 +108,63 @@ Agent: マージ済み worktree を削除:
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
 
+## テスト
+
+### 単体テスト
+
+```bash
+npm test
+```
+
+### 統合テスト
+
+```bash
+npm run test:integration
+```
+
+### E2Eテスト
+
+```bash
+npm run test:e2e
+```
+
+### テストカバレッジ
+
+```bash
+npm run test:coverage
+```
+
+### テスト構成
+
+```
+tests/
+  unit/                    # 単体テスト
+    commands/              # コマンドのテスト
+    scripts/               # スクリプトのテスト
+  integration/             # 統合テスト
+    task-flow.test.js      # タスクフロー全体のテスト
+    agent-communication.test.js  # エージェント間通信のテスト
+  e2e/                     # E2Eテスト
+    full-workflow.test.js  # 完全なワークフローのテスト
+  fixtures/                # テストデータ
+    sample-tasks.json
+    mock-responses.json
+```
+
+### テスト実行前の準備
+
+1. テスト用のGitリポジトリを準備
+2. GitHub CLIの認証設定
+3. Cursor Agent CLIのインストール確認
+
+```bash
+# テスト環境のセットアップ
+npm run test:setup
+
+# テスト用リポジトリの初期化
+npm run test:init-repo
+```
+
 ## ディレクトリ構成
 
 ```
