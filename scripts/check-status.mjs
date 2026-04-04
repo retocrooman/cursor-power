@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { TASKS_DIR } from "./paths.mjs";
+import { TASKS_DIR, QUESTIONS_DIR } from "./paths.mjs";
 
 function isProcessAlive(pid) {
   try {
@@ -57,7 +57,17 @@ for (const task of tasks) {
     if (!alive) {
       updateFromLog(task);
       if (task.status === "running") {
-        task.status = task.prUrl ? "pr_created" : "failed";
+        const hasQuestion = existsSync(join(QUESTIONS_DIR, `${task.id}.json`));
+        if (hasQuestion) {
+          const q = JSON.parse(readFileSync(join(QUESTIONS_DIR, `${task.id}.json`), "utf-8"));
+          if (!q.answer) {
+            task.status = "blocked";
+          } else {
+            task.status = task.prUrl ? "pr_created" : "failed";
+          }
+        } else {
+          task.status = task.prUrl ? "pr_created" : "failed";
+        }
       }
       changed = true;
     } else {
