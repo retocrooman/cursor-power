@@ -73,5 +73,5 @@ function install() {
 
   console.log(`\ncursor-power v${pkg.version} インストール完了。`);
   console.log("Agent tab で /task-add, /task-list, /task-status, /task-check, /task-review, /task-clean,");
-  console.log("/task-issue, /task-issues が使えます。");
+  console.log("/issue-add, /issue-list が使えます。");
 }
