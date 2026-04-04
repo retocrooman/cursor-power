@@ -8,15 +8,21 @@
 node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 ```
 
-出力の changedFiles を番号付きリストで表示する。例:
+出力の changedFiles を番号付きリストで表示する。各ファイルには diffStat（additions, deletions, isNew）が付与されているので、それを元にファイルごとの変更内容を一言で説明する。
+
+- isNew が true なら「新規ファイル」と明記
+- additions / deletions の数値を「+N / -N」形式で表示
+- diffStat を参考に、そのファイルで何が変わったかを推測して一言で補足する（例: 「依存追加」「新しいユーティリティ関数」「テスト追加」など）
+
+例:
 
 ```
 タスク 765e84e0 のレビュー (PR: URL)
 
 変更ファイル:
-  1. src/index.ts
-  2. README.md
-  3. package.json
+  1. src/index.ts (+12 / -3) — エントリポイントにルーティング追加
+  2. src/utils/helper.ts (+45 / -0) [新規] — ヘルパー関数を追加
+  3. package.json (+2 / -1) — 依存パッケージ追加
 
 見たいファイルを選んでください（番号またはファイル名）。
 ```
