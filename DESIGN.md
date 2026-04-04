@@ -104,6 +104,7 @@ flowchart TB
   task-config.md                 # 設定変更
   issue-add.md                   # issue 登録
   issue-list.md                  # issue 一覧
+  tutorial.md                    # 対話型ウォークスルー
 
 ~/.cursor-power/                 # グローバル状態管理
   config.json                    # 設定
@@ -122,7 +123,8 @@ flowchart TB
     add-task.mjs                 # タスク登録
     start-worker.mjs             # 子エージェント起動
     list-tasks.mjs               # タスク一覧
-    check-status.mjs             # ステータス確認
+    check-status.mjs             # ステータス確認（同期表示 + 非同期更新起動）
+    sync-status.mjs              # バックグラウンドでタスク状態を同期
     check-questions.mjs          # 質問確認・回答書き込み
     send-answer.mjs              # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs          # worktree クリーンアップ
@@ -244,7 +246,8 @@ stateDiagram-v2
 ```json
 {
   "defaultModel": "sonnet-4",
-  "maxConcurrency": 3
+  "maxConcurrency": 3,
+  "draftPR": false
 }
 ```
 
@@ -252,6 +255,7 @@ stateDiagram-v2
 |-----------|-----|-----------|------|
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
+| `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 
 ## コマンド別処理フロー
 
@@ -293,20 +297,25 @@ sequenceDiagram
 
 ### `/task-status`
 
+check-status.mjs は同期フェーズ（即座にタスク JSON を読み取ってレスポンス）と非同期フェーズ（sync-status.mjs をバックグラウンドで起動して PID 確認・ログ解析・PR 状態を更新）に分離されている。
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
   participant P as 親 Agent tab
   participant S as check-status.mjs
+  participant BG as sync-status.mjs
   participant G as git / gh
 
   U->>P: /task-status
   P->>S: node check-status.mjs
-  S->>S: タスク JSON 読み取り
-  S->>G: ブランチの最新 commit 確認
-  S->>G: PR 状態確認（あれば）
-  S-->>P: 詳細ステータス JSON
+  S->>S: タスク JSON 読み取り（同期）
+  S-->>P: 詳細ステータス JSON（即座に返却）
+  S->>BG: バックグラウンドで起動（detached）
   P->>U: 各タスクの進捗を表示
+  BG->>BG: PID 存在チェック・ログ解析
+  BG->>G: gh pr view で PR 状態確認
+  BG->>BG: タスク JSON を更新
 ```
 
 ### `/task-check`
@@ -447,22 +456,36 @@ sequenceDiagram
 
 ## 子エージェントへのプロンプト設計
 
-子エージェントに渡すプロンプトは、ユーザーが対話で決めた内容をベースに、最小限のシステム指示を付加する。
+子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（Git 操作手順、質問フロー、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
 
 ```
 {ユーザーが対話で決めたプロンプト}
 
 ---
-質問がある場合は ~/.cursor-power/questions/{task-id}.json に以下の形式で書いてください:
-{
-  "taskId": "{task-id}",
-  "question": "質問内容",
-  "askedAt": "ISO 8601 日時"
-}
-質問を書いたら作業を中断し、回答を待ってください。
+## 作業ルール
 
-完了したら gh pr create でPRを作成してください。
+### Git 操作
+- 作業は必ず現在の worktree 内で行うこと。他のディレクトリに移動しない。
+- 作業が完了したら以下を順番に実行:
+  1. git add で変更をステージ
+  2. git commit（Conventional Commits 形式）
+  3. git push -u origin HEAD
+  4. gh pr create --base {baseBranch} でPRを作成
+
+### 質問
+- 判断に迷ったり、仕様が不明確な場合は必ず質問すること。
+- 質問は ~/.cursor-power/questions/{task-id}.json に以下の形式で書く:
+  { "taskId": "{task-id}", "question": "質問内容", "askedAt": "ISO 8601 日時" }
+- 質問ファイルを書いたら作業を中断し、回答を待つ。
+
+### 禁止事項
+- main ブランチへの直接 push
+- force push
+- worktree 外のファイルの変更
+- 質問なしで曖昧な仕様を推測して実装すること
 ```
+
+回答中継時は `buildResumePrompt()` で簡潔なプロンプトを生成し、`agent --resume <session_id>` で子セッションに送信する。
 
 子エージェントにはレポのコンテキストやアーキテクチャ情報は渡さない。`--workspace` で対象レポを指定するため、子エージェント自身がコードベースを探索して理解する。
 

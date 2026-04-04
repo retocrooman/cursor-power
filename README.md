@@ -51,6 +51,7 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/task-config` | 設定を対話的に変更（モデル、同時実行数など） |
 | `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
 | `/issue-list` | 登録済み issue の一覧を表示 |
+| `/tutorial` | cursor-power の使い方をステップバイステップで体験するウォークスルー |
 
 ## 基本的な使い方
 
@@ -177,6 +178,7 @@ Agent: マージ済み worktree を削除:
   task-config.md
   issue-add.md
   issue-list.md
+  tutorial.md
 
 ~/.cursor-power/             # 状態管理・スクリプト
   config.json                # グローバル設定
@@ -195,7 +197,8 @@ Agent: マージ済み worktree を削除:
     add-task.mjs             # タスク登録
     start-worker.mjs         # 子エージェント起動
     list-tasks.mjs           # タスク一覧
-    check-status.mjs         # ステータス確認
+    check-status.mjs         # ステータス確認（同期表示 + 非同期更新起動）
+    sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態）
     check-questions.mjs      # 質問確認・回答書き込み
     send-answer.mjs          # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs      # worktree クリーンアップ
