@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
 import { TASKS_DIR, LOGS_DIR } from "./paths.mjs";
+import { buildResumePrompt } from "./prompt.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -35,7 +36,7 @@ const args = [
   task.sessionId,
   "--output-format",
   "json",
-  `回答: ${answer}\n\nこの回答を踏まえて作業を続行し、完了したらcommit、push、gh pr createでPRを作成してください。`,
+  buildResumePrompt(answer),
 ];
 
 mkdirSync(LOGS_DIR, { recursive: true });
