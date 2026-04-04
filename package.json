@@ -11,9 +11,20 @@
     "commands/",
     "scripts/"
   ],
+  "keywords": [
+    "cursor",
+    "agent",
+    "orchestration",
+    "parallel",
+    "worktree"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/retocrooman/cursor-power.git"
   },
-  "license": "MIT"
+  "homepage": "https://github.com/retocrooman/cursor-power",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
 }
