@@ -54,9 +54,11 @@ if (values.type && values.title) {
   branch = `task-${id}`;
 }
 
+const canStart = activeCount < maxConcurrency;
+
 const task = {
   id,
-  status: activeCount >= maxConcurrency ? "pending" : "pending",
+  status: "pending",
   prompt,
   planId: values.plan || null,
   sessionId: null,
@@ -72,4 +74,4 @@ const task = {
 
 writeFileSync(join(TASKS_DIR, `${id}.json`), JSON.stringify(task, null, 2));
 
-console.log(JSON.stringify(task));
+console.log(JSON.stringify({ ...task, canStart }));

@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, mkdirSync, openSync } from "node:fs";
 import { join } from "node:path";
-import { spawn } from "node:child_process";
+import { spawn, execSync } from "node:child_process";
 import { parseArgs } from "node:util";
 import { TASKS_DIR, CONFIG_PATH, LOGS_DIR } from "./paths.mjs";
 import { buildInitialPrompt } from "./prompt.mjs";
@@ -48,6 +48,22 @@ const args = [
   model,
   fullPrompt,
 ];
+
+try {
+  execSync(`git fetch origin && git pull origin ${task.baseBranch}`, {
+    cwd: task.repoPath,
+    stdio: "pipe",
+    timeout: 30_000,
+  });
+} catch (e) {
+  console.error(
+    JSON.stringify({
+      warning: `failed to update ${task.baseBranch} branch`,
+      taskId,
+      message: e.message,
+    }),
+  );
+}
 
 mkdirSync(LOGS_DIR, { recursive: true });
 const logPath = join(LOGS_DIR, `${taskId}.log`);

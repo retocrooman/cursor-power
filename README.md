@@ -46,7 +46,7 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/task-list` | 全タスクの一覧を表示 |
 | `/task-status` | 各子エージェントの進捗・状態を確認 |
 | `/task-check` | 子エージェントからの質問を確認し、回答を中継 |
-| `/task-review [タスクID]` | タスクのPRをレビュー（diffStat 付きファイル一覧、diff 表示、修正指示送信） |
+| `/task-review [タスクID]` | タスクのPRをレビュー（タスク概要表示、diffStat 付きファイル一覧、diff 表示、修正指示送信） |
 | `/task-clean` | マージ済み・クローズ済みPRの worktree を削除 |
 | `/task-config` | 設定を対話的に変更（モデル、同時実行数など） |
 | `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
@@ -121,10 +121,12 @@ Agent: task-c3d4 に回答を送信しました。
 
 Agent: タスク task-a1b2 のレビュー (PR: https://github.com/user/repo/pull/42)
        
+       概要: メール・パスワードによるログイン画面を実装（ベース: main）
+       
        変更ファイル:
-         1. src/components/auth/LoginForm.tsx
-         2. src/components/auth/index.ts
-         3. src/styles/auth.css
+         1. src/components/auth/LoginForm.tsx (+85 / -0) [新規] — ログインフォーム
+         2. src/components/auth/index.ts (+3 / -0) [新規] — barrel export
+         3. src/styles/auth.css (+42 / -0) [新規] — 認証画面スタイル
        
        見たいファイルを選んでください（番号またはファイル名）。
 
