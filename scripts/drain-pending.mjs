@@ -39,7 +39,7 @@ const maxConcurrency = config.maxConcurrency || 3;
 const tasks = loadTasks();
 
 const activeCount = tasks.filter(
-  (t) => t.status === "running" || t.status === "blocked",
+  (t) => t.status === "running" || t.status === "blocked" || t.status === "fixing" || t.status === "acceptance_running",
 ).length;
 
 const freeSlots = maxConcurrency - activeCount;

@@ -40,7 +40,10 @@ if (missingFields.length > 0) {
   process.exit(1);
 }
 
-const fullPrompt = buildInitialPrompt(taskId, task.prompt, { draftPR });
+const fullPrompt = buildInitialPrompt(taskId, task.prompt, {
+  draftPR,
+  acceptance: task.acceptance === true,
+});
 
 const args = [
   "--print",

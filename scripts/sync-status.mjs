@@ -2,12 +2,17 @@
 /**
  * Background sync: updates task JSON files with process liveness,
  * log parsing, and GitHub PR state. Spawned by check-status.mjs.
+ *
+ * For acceptance-enabled tasks, also handles:
+ * - Auto-launching acceptance child when implementation child finishes
+ * - Checking acceptance result and transitioning to pr_created or fixing
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { execSync, spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { TASKS_DIR, QUESTIONS_DIR } from "./paths.mjs";
+import { TASKS_DIR, QUESTIONS_DIR, ACCEPTANCE_DIR } from "./paths.mjs";
+import { buildFixingPrompt } from "./prompt.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -43,6 +48,35 @@ function updateFromLog(task) {
   }
 }
 
+function readAcceptanceResult(taskId) {
+  const path = join(ACCEPTANCE_DIR, `${taskId}.json`);
+  if (!existsSync(path)) return null;
+  try {
+    return JSON.parse(readFileSync(path, "utf-8"));
+  } catch {
+    return null;
+  }
+}
+
+function launchAcceptance(taskId) {
+  const child = spawn(
+    process.execPath,
+    [join(__dirname, "run-acceptance.mjs"), "--task-id", taskId],
+    { detached: true, stdio: "ignore" },
+  );
+  child.unref();
+}
+
+function resumeImplementor(task, answer) {
+  if (!task.sessionId) return;
+  const child = spawn(
+    process.execPath,
+    [join(__dirname, "send-answer.mjs"), "--task-id", task.id, "--answer", answer],
+    { detached: true, stdio: "ignore" },
+  );
+  child.unref();
+}
+
 let tasks = [];
 try {
   tasks = readdirSync(TASKS_DIR)
@@ -75,9 +109,16 @@ for (const task of tasks) {
           );
           if (!q.answer) {
             task.status = "blocked";
+          } else if (task.acceptance && !task.prUrl) {
+            // Acceptance-enabled task: implementation child done → launch acceptance
+            launchAcceptance(task.id);
+            task.status = "acceptance_running";
           } else {
             task.status = task.prUrl ? "pr_created" : "failed";
           }
+        } else if (task.acceptance && !task.prUrl) {
+          launchAcceptance(task.id);
+          task.status = "acceptance_running";
         } else {
           task.status = task.prUrl ? "pr_created" : "failed";
         }
@@ -90,6 +131,27 @@ for (const task of tasks) {
         changed = true;
       }
     }
+  }
+
+  // Handle acceptance child completion
+  if (task.status === "acceptance_running" && task.acceptancePid) {
+    const alive = isProcessAlive(task.acceptancePid);
+    if (!alive) {
+      const result = readAcceptanceResult(task.id);
+      if (result && result.result === "passed") {
+        resumeImplementor(task, "受け入れテストに合格しました。PR を作成してください。\n\n作業が完了したら以下を順番に実行:\n1. git push -u origin HEAD（未 push のコミットがあれば）\n2. gh pr create --base " + task.baseBranch + " でPRを作成\n\nPRのタイトルは Conventional Commits 形式にする。");
+        task.status = "running";
+      } else {
+        task.status = "fixing";
+      }
+      delete task.acceptancePid;
+      changed = true;
+    }
+  } else if (task.status === "fixing" && task.sessionId) {
+    // Resume implementor with fix instructions (runs on next sync cycle after fixing was set)
+    resumeImplementor(task, buildFixingPrompt(task.id));
+    task.status = "running";
+    changed = true;
   }
 
   if (task.prUrl) {

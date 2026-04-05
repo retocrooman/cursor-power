@@ -14,6 +14,7 @@ const { values } = parseArgs({
     model: { type: "string" },
     type: { type: "string" },
     title: { type: "string" },
+    acceptance: { type: "boolean", default: false },
   },
 });
 
@@ -31,9 +32,11 @@ if (!prompt || !values.repo) {
 mkdirSync(TASKS_DIR, { recursive: true });
 
 let maxConcurrency = 3;
+let acceptanceByDefault = false;
 try {
   const config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
   if (config.maxConcurrency) maxConcurrency = config.maxConcurrency;
+  if (config.acceptanceByDefault === true) acceptanceByDefault = true;
 } catch {}
 
 const existing = readdirSync(TASKS_DIR)
@@ -41,7 +44,7 @@ const existing = readdirSync(TASKS_DIR)
   .map((f) => JSON.parse(readFileSync(join(TASKS_DIR, f), "utf-8")));
 
 const activeCount = existing.filter(
-  (t) => t.status === "running" || t.status === "blocked"
+  (t) => t.status === "running" || t.status === "blocked" || t.status === "fixing" || t.status === "acceptance_running"
 ).length;
 
 const id = randomUUID().slice(0, 8);
@@ -56,6 +59,8 @@ if (values.type && values.title) {
 
 const canStart = activeCount < maxConcurrency;
 
+const acceptance = values.acceptance || acceptanceByDefault;
+
 const task = {
   id,
   status: "pending",
@@ -66,6 +71,7 @@ const task = {
   branch,
   baseBranch: values.base,
   model: values.model || null,
+  acceptance,
   prUrl: null,
   worktreePath: null,
   createdAt: now,

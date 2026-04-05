@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.5.0 (2026-04-05)
+
+### Features
+
+- **acceptance:** PR 前の受け入れテスト機能を追加（`--acceptance` フラグでオプトイン）(#11)
+  - `add-task.mjs` に `--acceptance` フラグを追加。タスク単位で受け入れテストを有効化
+  - `run-acceptance.mjs` を新規追加。受け入れ子を別セッションで起動し、チェックリストを自動検証
+  - 受け入れ合格で実装子に PR 作成を指示、不合格で `fixing` ステータスに遷移して修正ループ
+  - `~/.cursor-power/acceptance/<taskId>.json` に受け入れ項目（`items[]: { id, text, checked, notes }`, `result`, `updatedAt`）を定義
+- **status:** 新ステータス `fixing`（受け入れ不合格→修正中）と `acceptance_running`（受け入れテスト実行中）を追加
+- **config:** `acceptanceByDefault`（boolean、既定 `false`）を設定に追加。`true` で全タスクにデフォルト受け入れテストを有効化
+
+### Documentation
+
+- DESIGN.md: 状態遷移図に `fixing` / `acceptance_running` を追加、受け入れフローのシーケンス図・acceptance JSON スキーマを追記
+- README.md: 受け入れテストの使い方セクション、設定テーブルに `acceptanceByDefault` を追記
+- commands/task-add.md, task-plan.md, task-promote.md: `--acceptance` オプションの説明を追記
+
 ## 0.4.0 (2026-04-05)
 
 ### Features
