@@ -291,6 +291,7 @@ PR がマージされたら /task-clean でクリーンアップできます。
     - worktree 削除: ~/.cursor/worktrees/repo/task-xyz789
     - ブランチ削除: task-xyz789
     - 質問ファイル削除: ~/.cursor-power/questions/task-xyz789.json
+    - ログファイル削除: ~/.cursor-power/logs/task-xyz789.log
     - タスクステータス: done に更新
 
 未マージのタスクはスキップされます。安心して実行できます。
