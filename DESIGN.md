@@ -569,7 +569,7 @@ sequenceDiagram
 
 ### 受け入れ JSON (`~/.cursor-power/acceptance/<task-id>.json`)
 
-親（ユーザー）が手動で作成する。受け入れ子がチェック結果を書き戻す。
+親（ユーザー）が手動で作成する。受け入れ子がチェック結果を書き戻す。受け入れ子への指示は `buildAcceptancePrompt()` で生成される。`sync-status.mjs` はこのファイルのトップレベル `result` が `"passed"` のときだけ合格として実装子を再開するため、受け入れ子は **必ずこのパスへ JSON を保存**し、保存後に読み直して確認する（`prompt.mjs` に明記）。
 
 ```json
 {

@@ -6,6 +6,10 @@
 
 - **prompt:** 受け入れテスト用プロンプトに、受け入れ JSON の必須保存・`sync-status` が参照する `result` フィールド・保存後の読み直しを明記
 
+### Documentation
+
+- DESIGN.md: 受け入れ JSON 節に、`buildAcceptancePrompt` とディスク保存の説明を追記
+
 ## 0.6.0 (2026-04-05)
 
 ### Features
