@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.1 (2026-04-05)
+
+### Bug Fixes
+
+- **branch:** `agent --worktree` が `/` を含む名前を拒否するため、`--type` / `--title` 時のブランチを `type/title-id` から `type-title-id` に変更
+
+### Documentation
+
+- README / DESIGN にブランチ命名の制約を追記
+
 ## 0.3.0 (2026-04-04)
 
 ### Features

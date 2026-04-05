@@ -193,7 +193,7 @@ stateDiagram-v2
 | `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
 | `repoPath` | string | 対象リポジトリの絶対パス |
-| `branch` | string | 作業ブランチ名（`task-<id>`） |
+| `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>-<title>-<id>`。Cursor Agent の `--worktree` は `/` を含む名前を拒否するためスラッシュは使わない） |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `prUrl` | string \| null | 作成された PR の URL |
