@@ -24,6 +24,9 @@
   },
   "homepage": "https://github.com/retocrooman/cursor-power",
   "license": "MIT",
+  "scripts": {
+    "regression": "node scripts/regression-check.mjs"
+  },
   "engines": {
     "node": ">=18"
   }
