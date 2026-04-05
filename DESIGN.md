@@ -414,6 +414,12 @@ sequenceDiagram
 
 ### `/task-review [タスクID]`
 
+差分の基準は `git merge-base ${baseBranch} HEAD`（merge-base）を使用する。これにより `baseBranch` がリモートで進んでいても、GitHub PR の Files changed と同じファイル集合・差分が表示される。
+
+- `getChangedFiles` / `getDiffStat`: `mergeBase..HEAD` で差分を取得
+- `--action diff`: 左ペインは `git show ${mergeBase}:${file}` の内容
+- `isNew` 判定: `mergeBase` 時点にファイルが存在するかで判定
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
@@ -423,11 +429,12 @@ sequenceDiagram
 
   U->>P: /task-review task-a1b2
   P->>S: node review-pr.mjs --task-id a1b2
+  S->>S: mergeBase = git merge-base ${baseBranch} HEAD
   S-->>P: prompt + changedFiles（diffStat 付き、自動生成ファイル除外）
   P->>U: タスク概要 + ファイル一覧を表示（+N / -N, 新規判定）
   U->>P: ファイル番号を選択
   P->>S: node review-pr.mjs --task-id a1b2 --action diff --file <path>
-  S-->>P: エディタで diff を表示
+  S-->>P: エディタで diff を表示（左ペイン = mergeBase 時点）
   U->>P: 修正指示
   P->>A: node send-answer.mjs --task-id a1b2 --answer "修正指示"
   P->>U: 修正指示を送信しました
