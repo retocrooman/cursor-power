@@ -2,6 +2,16 @@
 
 ## 0.5.1 (2026-04-05)
 
+### Features
+
+- **install:** `cursor-power install` で既存 `config.json` の不足キーをデフォルト値で補完するシャローマージを実装 (#7)
+  - 既存のユーザー設定値は保持し、パッケージ側で追加された新キーのみ補完
+  - 新規インストール時の挙動は従来と同等
+
+### Refactoring
+
+- **config:** `DEFAULTS` を `scripts/defaults.mjs` に切り出し、`update-config.mjs` と `bin/cursor-power.mjs` で共用
+
 ### Bug Fixes
 
 - **review:** 差分の基準を `baseBranch` 先端から `merge-base(baseBranch, HEAD)` に変更し、GitHub PR の Files changed と同じファイル集合・差分を表示するようにした (#14)
@@ -11,8 +21,9 @@
 
 ### Documentation
 
+- README.md: install 説明にマージ動作の記述を追加、スクリプト一覧に `defaults.mjs` を追加
+- DESIGN.md: ディレクトリ構成に `defaults.mjs` を追加
 - DESIGN.md: `/task-review` フロー図の説明に merge-base ベースの差分取得を追記
-- CHANGELOG.md: v0.5.1 エントリを追加
 
 ## 0.5.0 (2026-04-05)
 

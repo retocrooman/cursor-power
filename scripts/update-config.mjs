@@ -4,15 +4,7 @@ import { dirname } from "node:path";
 import { parseArgs } from "node:util";
 import { execFileSync } from "node:child_process";
 import { CONFIG_PATH, POWER_DIR } from "./paths.mjs";
-
-const DEFAULTS = {
-  defaultModel: "sonnet-4",
-  maxConcurrency: 3,
-  draftPR: false,
-  autoStartPending: true,
-  dashboardPort: 3820,
-  acceptanceByDefault: false,
-};
+import { DEFAULTS } from "./defaults.mjs";
 
 const { values } = parseArgs({
   options: {
