@@ -1,0 +1,209 @@
+#!/usr/bin/env node
+/**
+ * Local-only web dashboard for monitoring cursor-power task state.
+ * Binds to 127.0.0.1 only. No external dependencies.
+ *
+ * Usage:
+ *   node ~/.cursor-power/scripts/dashboard.mjs [--port <number>]
+ */
+import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { parseArgs } from "node:util";
+import { CONFIG_PATH } from "./paths.mjs";
+import { getTaskStatuses } from "./task-reader.mjs";
+
+function readConfig() {
+  try {
+    return JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
+  } catch {
+    return {};
+  }
+}
+
+const { values } = parseArgs({
+  options: {
+    port: { type: "string", short: "p" },
+  },
+  allowPositionals: false,
+});
+
+const config = readConfig();
+const port = values.port ? Number(values.port) : (config.dashboardPort ?? 3820);
+
+if (Number.isNaN(port) || port < 1 || port > 65535) {
+  console.error(`Invalid port: ${values.port}`);
+  process.exit(1);
+}
+
+// ---------- HTML ----------
+
+const HTML = /* html */ `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>cursor-power dashboard</title>
+<style>
+  :root {
+    --bg: #0d1117; --surface: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
+    --green: #3fb950; --yellow: #d29922; --red: #f85149;
+    --orange: #db6d28; --purple: #bc8cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.5;
+    padding: 1.5rem; max-width: 960px; margin: 0 auto;
+  }
+  header { display: flex; align-items: center; gap: .75rem; margin-bottom: 1.5rem; }
+  header h1 { font-size: 1.25rem; font-weight: 600; }
+  .meta { color: var(--muted); font-size: .8rem; }
+  .stats { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .5rem 1rem; font-size: .85rem;
+  }
+  .stat strong { font-variant-numeric: tabular-nums; }
+  .card-list { display: flex; flex-direction: column; gap: .75rem; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem; transition: border-color .15s;
+  }
+  .card:hover { border-color: var(--accent); }
+  .card-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
+  .task-id { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .85rem; color: var(--accent); }
+  .badge {
+    display: inline-block; font-size: .7rem; font-weight: 600;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase;
+  }
+  .badge-pending   { background: var(--muted); color: var(--bg); }
+  .badge-running   { background: var(--green); color: var(--bg); }
+  .badge-blocked   { background: var(--yellow); color: var(--bg); }
+  .badge-pr_created { background: var(--purple); color: var(--bg); }
+  .badge-failed    { background: var(--red); color: #fff; }
+  .badge-done      { background: var(--border); color: var(--text); }
+  .prompt { color: var(--text); font-size: .9rem; }
+  .details { margin-top: .5rem; font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+  .details a { color: var(--accent); text-decoration: none; }
+  .details a:hover { text-decoration: underline; }
+  .question-box {
+    margin-top: .5rem; padding: .5rem .75rem; font-size: .8rem;
+    background: rgba(210, 153, 34, .1); border-left: 3px solid var(--yellow);
+    border-radius: 4px; color: var(--yellow);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 3rem 0; }
+  .poll-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
+  .poll-indicator.error { background: var(--red); }
+</style>
+</head>
+<body>
+<header>
+  <h1>cursor-power dashboard</h1>
+  <span class="poll-indicator" id="indicator" title="polling"></span>
+  <span class="meta" id="updated"></span>
+</header>
+<div class="stats" id="stats"></div>
+<div class="card-list" id="tasks"></div>
+
+<script>
+const POLL_INTERVAL = 3000;
+
+function badge(status) {
+  return '<span class="badge badge-' + status + '">' + status.replace('_', ' ') + '</span>';
+}
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const diff = Date.now() - new Date(iso).getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return s + '秒前';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + '分前';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + '時間前';
+  return Math.floor(h / 24) + '日前';
+}
+
+function renderStats(tasks) {
+  const counts = {};
+  for (const t of tasks) counts[t.status] = (counts[t.status] || 0) + 1;
+  const el = document.getElementById('stats');
+  el.innerHTML = '<div class="stat">合計 <strong>' + tasks.length + '</strong></div>' +
+    Object.entries(counts).map(function(e) {
+      return '<div class="stat">' + badge(e[0]) + ' <strong>' + e[1] + '</strong></div>';
+    }).join('');
+}
+
+function renderTasks(tasks) {
+  const el = document.getElementById('tasks');
+  if (tasks.length === 0) {
+    el.innerHTML = '<div class="empty">タスクがありません</div>';
+    return;
+  }
+  el.innerHTML = tasks.map(function(t) {
+    var html = '<div class="card"><div class="card-header"><span class="task-id">' + t.id + '</span>' + badge(t.status) + '</div>';
+    html += '<div class="prompt">' + escapeHtml(t.prompt || '') + '</div>';
+    html += '<div class="details">';
+    if (t.branch) html += '<span>branch: ' + escapeHtml(t.branch) + '</span>';
+    if (t.prUrl) html += '<a href="' + escapeHtml(t.prUrl) + '" target="_blank" rel="noopener">PR</a>';
+    if (t.updatedAt) html += '<span>更新: ' + relativeTime(t.updatedAt) + '</span>';
+    if (t.createdAt) html += '<span>作成: ' + relativeTime(t.createdAt) + '</span>';
+    html += '</div>';
+    if (t.blocked && t.question) {
+      html += '<div class="question-box">質問: ' + escapeHtml(t.question) + '</div>';
+    }
+    html += '</div>';
+    return html;
+  }).join('');
+}
+
+function escapeHtml(s) {
+  var d = document.createElement('div');
+  d.appendChild(document.createTextNode(s));
+  return d.innerHTML;
+}
+
+async function poll() {
+  var ind = document.getElementById('indicator');
+  try {
+    var res = await fetch('/api/status');
+    var data = await res.json();
+    renderStats(data);
+    renderTasks(data);
+    ind.className = 'poll-indicator';
+    document.getElementById('updated').textContent = new Date().toLocaleTimeString();
+  } catch (e) {
+    ind.className = 'poll-indicator error';
+  }
+}
+
+poll();
+setInterval(poll, POLL_INTERVAL);
+</script>
+</body>
+</html>`;
+
+// ---------- Server ----------
+
+const server = createServer((req, res) => {
+  if (req.method === "GET" && req.url === "/api/status") {
+    const data = getTaskStatuses({ includeDone: false });
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify(data));
+    return;
+  }
+
+  if (req.method === "GET" && (req.url === "/" || req.url === "/index.html")) {
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(HTML);
+    return;
+  }
+
+  res.writeHead(404, { "Content-Type": "text/plain" });
+  res.end("Not Found");
+});
+
+server.listen(port, "127.0.0.1", () => {
+  console.log(`cursor-power dashboard: http://127.0.0.1:${port}`);
+});

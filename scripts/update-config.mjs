@@ -10,6 +10,7 @@ const DEFAULTS = {
   maxConcurrency: 3,
   draftPR: false,
   autoStartPending: true,
+  dashboardPort: 3820,
 };
 
 const { values } = parseArgs({

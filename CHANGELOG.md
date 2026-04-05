@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0 (2026-04-05)
+
+### Features
+
+- **dashboard:** ローカル Web ダッシュボードを追加。Node 組み込み `http` モジュールのみで `127.0.0.1` にバインドし、タスク状態をブラウザでリアルタイム監視できる (#9)
+- **dashboard:** `config.json` の `dashboardPort`（既定 `3820`）+ `--port` CLI オプションでポート設定可能
+- **task-reader:** `check-status.mjs` のタスク読み取りロジックを `task-reader.mjs` に共通化し、ダッシュボードと CLI で同じデータソースを使用
+
+### Documentation
+
+- DESIGN.md: `/dashboard` フロー図・仕様テーブルを追加、設定スキーマに `dashboardPort` を追記
+- README.md: Web ダッシュボードセクション・コマンド表・設定テーブル・ディレクトリ構成を更新
+
 ## 0.4.0 (2026-04-05)
 
 ### Features
