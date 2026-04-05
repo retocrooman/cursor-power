@@ -210,6 +210,24 @@ cat ~/.cursor-power/acceptance/<taskId>.json | jq '{result, items: [.items[] | {
 
 この場合、項目 2 が不合格になり `fixing` → `running` → `acceptance_running` のループが観察できる。
 
+## 注意事項
+
+### 受け入れ結果ファイルはリポジトリ外
+
+受け入れ結果ファイル `~/.cursor-power/acceptance/<taskId>.json` はリポジトリのワークスペース外に置かれている。受け入れ子エージェントの `--workspace` はリポジトリを指すため、プロンプトで **絶対パスへの書き込みを明示** している（`prompt.mjs` の `buildAcceptancePrompt`）。
+
+受け入れ子がログ上で「合格」と報告していても、**JSON ファイルが更新されていなければ `sync-status.mjs` は合格と判定しない**。
+
+### `result` フィールドの契約
+
+`sync-status.mjs` の `readAcceptanceResult` は **`result` が `"passed"` の場合のみ合格** とする。
+
+- `result: null` → 不合格扱い（`fixing` に遷移）
+- `result: "failed"` → 不合格（`fixing` に遷移）
+- `result: "passed"` → 合格（実装子に PR 作成を指示）
+
+`checked` を全て `true` にしても `result` を `"passed"` にセットしなければ合格にならない。`updatedAt` も ISO 8601 で必ず入れること。
+
 ## トラブルシューティング
 
 | 症状 | 考えられる原因 | 対処法 |
@@ -219,5 +237,7 @@ cat ~/.cursor-power/acceptance/<taskId>.json | jq '{result, items: [.items[] | {
 | `acceptance_running` に遷移せず `blocked` になる | 未回答の質問がある | `/task-check` で質問に回答する |
 | `acceptance_running` に遷移せず `failed` になる | `acceptance: true` がタスクに未設定 | タスク JSON の `acceptance` フィールドを確認する |
 | 受け入れ子がすぐ終了する | チェックリストに `items` がない | `acceptance/<id>.json` の `items` 配列を確認する |
+| 合格のはずが `fixing` に遷移する | `result` が `null` のまま（JSON ファイル未更新） | `acceptance/<id>.json` の `result` フィールドを確認。`"passed"` が必要 |
+| 合格のはずが `fixing` に遷移する | 受け入れ子がファイルを書き込めていない（ワークスペース外） | `logs/<id>-acceptance.log` でエラーを確認。プロンプトの絶対パス指示を確認 |
 | 修正ループが止まらない | 受け入れ項目が満たせない内容になっている | `acceptance/<id>.json` を修正して再実行する |
 | `sessionId` が null で中継できない | ログにセッション情報が出力されていない | `logs/<id>.log` を確認し、agent CLI が正常起動しているか調べる |
