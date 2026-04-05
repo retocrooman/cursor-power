@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.2 (2026-04-05)
+## 0.6.2 (2026-04-05)
 
 ### Refactoring
 
@@ -12,6 +12,63 @@
 - README.md: ブランチ名の説明をスラッシュなし統一に更新
 - commands/task-add.md: ブランチ名生成の説明を更新
 - scripts/paths.mjs: `agentWorktreeLabel` のコメントを更新
+
+## 0.6.1 (2026-04-05)
+
+### Bug Fixes
+
+- **prompt:** 受け入れテスト用プロンプトに、受け入れ JSON の必須保存・`sync-status` が参照する `result` フィールド・保存後の読み直しを明記
+
+### Documentation
+
+- DESIGN.md: 受け入れ JSON 節に、`buildAcceptancePrompt` とディスク保存の説明を追記
+
+## 0.6.0 (2026-04-05)
+
+### Features
+
+- **dashboard:** タブ切り替え UI を追加。「タスク」と「Issues」タブでタスク一覧と issue 一覧を同一画面で切り替え表示
+- **dashboard:** `GET /api/issues` エンドポイントを追加。`issues.json` を読み取り JSON 配列を返却
+- **dashboard:** Issue カードに id（`#N`）・本文プレビュー（先頭3行）・作成日時（相対時間）を表示
+- **dashboard:** タブに件数バッジを表示。ポーリング時に `/api/status` と `/api/issues` を並行取得
+- **paths:** `ISSUES_PATH` を `paths.mjs` に共通定数として追加。`manage-issues.mjs` と `dashboard.mjs` で共用
+
+### Refactoring
+
+- **manage-issues:** `ISSUES_PATH` のローカル定義を削除し、`paths.mjs` からインポートする方式に統一
+
+### Documentation
+
+- DESIGN.md: `/dashboard` フロー図に `/api/issues` を追加、仕様テーブルにタブ切り替え・Issue カードの仕様を追記
+- README.md: Web ダッシュボードセクションにタブ切り替えと issue 一覧の説明を追記
+- commands/dashboard.md: issue 一覧タブの説明を追記
+
+## 0.5.3 (2026-04-05)
+
+### Features
+
+- **dashboard:** カードクリックで詳細モーダルを表示。prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・作成日時・更新日時・受け入れテスト状態・blocked 時の質問全文を確認可能
+- **dashboard:** モーダルは×ボタン・Esc キー・オーバーレイクリックで閉じられる
+- **dashboard:** カード内の PR リンクなどクリック時はイベント伝播を停止し、モーダルが誤って開かない
+
+### Documentation
+
+- DESIGN.md: ダッシュボード仕様テーブルにカード詳細モーダルの仕様を追記
+- README.md: Web ダッシュボードセクションにカード詳細モーダルの説明を追記
+- commands/dashboard.md: モーダル機能の説明を追記
+
+## 0.5.2 (2026-04-05)
+
+### Features
+
+- **dashboard:** ポーリング時に `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を自動更新するようにした。`/task-status` を実行しなくてもダッシュボード表示中はタスク状態が追従する
+- **dashboard:** ポーリング間隔を 5秒 → 10秒に変更
+
+### Documentation
+
+- DESIGN.md: ダッシュボード節のシーケンス図・仕様テーブルを更新（10秒ポーリング、sync-status 起動）
+- README.md: Web ダッシュボードの説明を更新（10秒間隔、自動同期）
+- commands/dashboard.md: ポーリング時の自動同期について追記
 
 ## 0.5.1 (2026-04-05)
 
