@@ -1,10 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
-import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { POWER_DIR } from "./paths.mjs";
-
-const ISSUES_PATH = join(POWER_DIR, "issues.json");
+import { POWER_DIR, ISSUES_PATH } from "./paths.mjs";
 
 const { values } = parseArgs({
   options: {

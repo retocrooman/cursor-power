@@ -501,19 +501,23 @@ sequenceDiagram
   P->>U: ダッシュボード URL を案内
   B->>D: GET /（HTML）
   B->>D: GET /api/status（ポーリング、5秒間隔）
+  B->>D: GET /api/issues（ポーリング、5秒間隔）
   D->>D: task-reader.mjs でタスク JSON 読み取り
-  D-->>B: タスク一覧 JSON
+  D->>D: issues.json を読み取り
+  D-->>B: タスク一覧 JSON / Issue 一覧 JSON
 ```
 
 | 項目 | 仕様 |
 |------|------|
 | バインド | `127.0.0.1` のみ（ローカル専用） |
 | ポート | `config.json` の `dashboardPort`（既定 `3820`）。`--port` で上書き可 |
-| リアルタイム | ブラウザ側ポーリング（5秒間隔、`fetch('/api/status')`） |
-| レイアウト | 1タスク＝1カード。ダークテーマ |
-| カード表示 | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
-| 並び順 | `updatedAt` 降順（API 側でソート） |
-| データ共有 | `task-reader.mjs` を `check-status.mjs` と共用 |
+| リアルタイム | ブラウザ側ポーリング（5秒間隔、`/api/status` と `/api/issues` を並行取得） |
+| タブ切り替え | ヘッダー下にタブ（「タスク」/「Issues」）。アクティブタブに応じて stats + カード一覧を切り替え |
+| レイアウト | 1タスク＝1カード / 1 issue＝1カード。ダークテーマ |
+| タスクカード | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
+| Issue カード | id（`#N`）, 本文プレビュー（先頭3行）, createdAt（相対時間） |
+| 並び順 | タスク: `updatedAt` 降順（API 側でソート）。Issue: ファイル順（id 昇順） |
+| データ共有 | タスクは `task-reader.mjs` を `check-status.mjs` と共用。Issue は `paths.mjs` の `ISSUES_PATH` を `manage-issues.mjs` と共用 |
 
 ### 受け入れテストフロー（`--acceptance` 付きタスクのみ）
 

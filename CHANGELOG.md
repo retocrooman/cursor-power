@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.6.0 (2026-04-05)
+
+### Features
+
+- **dashboard:** タブ切り替え UI を追加。「タスク」と「Issues」タブでタスク一覧と issue 一覧を同一画面で切り替え表示
+- **dashboard:** `GET /api/issues` エンドポイントを追加。`issues.json` を読み取り JSON 配列を返却
+- **dashboard:** Issue カードに id（`#N`）・本文プレビュー（先頭3行）・作成日時（相対時間）を表示
+- **dashboard:** タブに件数バッジを表示。ポーリング時に `/api/status` と `/api/issues` を並行取得
+- **paths:** `ISSUES_PATH` を `paths.mjs` に共通定数として追加。`manage-issues.mjs` と `dashboard.mjs` で共用
+
+### Refactoring
+
+- **manage-issues:** `ISSUES_PATH` のローカル定義を削除し、`paths.mjs` からインポートする方式に統一
+
+### Documentation
+
+- DESIGN.md: `/dashboard` フロー図に `/api/issues` を追加、仕様テーブルにタブ切り替え・Issue カードの仕様を追記
+- README.md: Web ダッシュボードセクションにタブ切り替えと issue 一覧の説明を追記
+- commands/dashboard.md: issue 一覧タブの説明を追記
+
 ## 0.5.0 (2026-04-05)
 
 ### BREAKING CHANGES
