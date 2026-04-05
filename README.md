@@ -157,7 +157,8 @@ Agent: マージ済み worktree を削除:
 {
   "defaultModel": "sonnet-4",
   "maxConcurrency": 3,
-  "draftPR": false
+  "draftPR": false,
+  "autoStartPending": true
 }
 ```
 
@@ -166,6 +167,7 @@ Agent: マージ済み worktree を削除:
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
+| `autoStartPending` | boolean | `true` | `true` のとき、並列枠に空きが出たら `pending` タスクを FIFO で自動起動する |
 
 ## ディレクトリ構成
 
@@ -201,7 +203,8 @@ Agent: マージ済み worktree を削除:
     start-worker.mjs         # 子エージェント起動
     list-tasks.mjs           # タスク一覧
     check-status.mjs         # ステータス確認（同期表示 + 非同期更新起動）
-    sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態・sessionId 補完）
+    sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態・sessionId 補完）→ drain-pending を起動
+    drain-pending.mjs        # 空き枠で pending タスクを自動起動（FIFO）
     check-questions.mjs      # 質問確認・回答書き込み
     send-answer.mjs          # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs      # worktree クリーンアップ

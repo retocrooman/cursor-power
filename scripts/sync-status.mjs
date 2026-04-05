@@ -4,9 +4,12 @@
  * log parsing, and GitHub PR state. Spawned by check-status.mjs.
  */
 import { readdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
-import { execSync } from "node:child_process";
+import { join, dirname } from "node:path";
+import { execSync, spawn } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { TASKS_DIR, QUESTIONS_DIR } from "./paths.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function isProcessAlive(pid) {
   try {
@@ -111,3 +114,11 @@ for (const task of tasks) {
     );
   }
 }
+
+// After all status updates, try to start pending tasks in free slots
+const drainChild = spawn(
+  process.execPath,
+  [join(__dirname, "drain-pending.mjs")],
+  { detached: true, stdio: "ignore" },
+);
+drainChild.unref();

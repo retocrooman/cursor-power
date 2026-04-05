@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 (2026-04-05)
+
+### Features
+
+- **drain-pending:** 並列枠に空きが出たとき `pending` タスクを `createdAt` 順（FIFO）で自動起動する `drain-pending.mjs` を追加 (#13)
+- **config:** `autoStartPending`（boolean、既定 `true`）を設定に追加。`false` で自動起動を無効化
+
+### Documentation
+
+- DESIGN.md: 「pending の自動起動」セクションを追加し、状態遷移図・シーケンス図を更新
+- README.md: 設定テーブルに `autoStartPending` を追記、スクリプト一覧に `drain-pending.mjs` を追加
+
 ## 0.3.3 (2026-04-05)
 
 ### Bug Fixes
