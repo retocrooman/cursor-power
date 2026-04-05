@@ -147,6 +147,7 @@ if (action === "open") {
     branch: task.branch,
     baseBranch,
     prompt: task.prompt,
+    riskScore: task.riskScore || null,
     changedFiles,
   };
   console.log(JSON.stringify(info, null, 2));

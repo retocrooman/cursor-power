@@ -4,11 +4,12 @@
 node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 ```
 
-出力の prompt から背景・目的・ベースブランチを一文で要約。changedFiles を番号付きリストで表示（isNew=true → 「新規」、`+N / -N` で diffStat、変更内容を一言補足）:
+出力の prompt から背景・目的・ベースブランチを一文で要約。riskScore があれば概要直後に「リスク: 影響度 N/5, 発生率 N/5」（null なら「リスク: 未評価」）を表示。changedFiles を番号付きリストで表示（isNew=true → 「新規」、`+N / -N` で diffStat、変更内容を一言補足）:
 
 ```
 タスク 765e84e0 のレビュー (PR: URL)
 概要: エントリポイントにルーティングを追加（ベース: main）
+リスク: 影響度 3/5, 発生率 2/5
 変更ファイル:
   1. src/index.ts (+12 / -3) — ルーティング追加
   2. src/utils/helper.ts (+45 / -0) [新規] — ヘルパー関数

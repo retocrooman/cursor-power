@@ -5,7 +5,6 @@
 ### Features
 
 - **review:** show task summary from prompt on review start (#22)
-- **review:** show task summary from prompt on review start
 - **tutorial:** add interactive walkthrough command for new users (#17)
 - **config:** add draftPR option to create PRs in draft state (#16)
 - **review:** add diffStat to file listing and filter auto-generated files (#14)
@@ -31,12 +30,9 @@
 - update README with /task-plan and /task-review commands
 - update TODO.md to reflect current implementation status
 
-### Other
+### Performance
 
-- Merge pull request #22 from retocrooman/task-e9bd4720
 - **status:** split check-status into sync and async phases (#18)
-- Merge pull request #8 from retocrooman/task-6feb239e
-- Merge pull request #7 from retocrooman/task-e1820d59
 
 ## 0.2.0 (2026-04-04)
 

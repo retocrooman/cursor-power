@@ -27,13 +27,23 @@ export function buildInitialPrompt(taskId, userPrompt, { draftPR = false } = {})
 
 - 質問ファイルを書いたら作業を中断し、回答を待つ。それ以上の作業はしないこと。
 
+### リスクスコア評価
+- PR作成前に、この変更の「障害影響度」と「障害発生率」をそれぞれ1〜5で評価すること。
+- 判断基準:
+  - impact（障害影響度）: コアロジックへの影響度。1=軽微、5=致命的
+  - likelihood（障害発生率）: バグが入る可能性。1=ほぼなし、5=非常に高い
+- 評価結果をタスクJSONファイル（~/.cursor-power/tasks/${taskId}.json）の riskScore フィールドに書き込むこと。
+- 形式: {"impact": 1-5, "likelihood": 1-5}
+- 書き込みにはJSONファイルを読み取り、riskScore フィールドを追加して上書きすること。
+
 ### Git 操作
 - 作業は必ず現在の worktree 内で行うこと。他のディレクトリに移動しない。
 - 作業が完了したら以下を順番に実行:
   1. git add で変更をステージ
   2. git commit（Conventional Commits 形式）
-  3. git push -u origin HEAD
-  4. ${ghPrCreateCmd} でPRを作成
+  3. リスクスコア評価を実施し、タスクJSONに書き込む
+  4. git push -u origin HEAD
+  5. ${ghPrCreateCmd} でPRを作成
 - PRのタイトルは Conventional Commits 形式にする。
 
 ### 禁止事項

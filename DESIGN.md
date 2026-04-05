@@ -394,8 +394,8 @@ sequenceDiagram
 
   U->>P: /task-review task-a1b2
   P->>S: node review-pr.mjs --task-id a1b2
-  S-->>P: changedFiles（diffStat 付き、自動生成ファイル除外）
-  P->>U: ファイル一覧を表示（+N / -N, 新規判定）
+  S-->>P: prompt + changedFiles（diffStat 付き、自動生成ファイル除外）
+  P->>U: タスク概要 + ファイル一覧を表示（+N / -N, 新規判定）
   U->>P: ファイル番号を選択
   P->>S: node review-pr.mjs --task-id a1b2 --action diff --file <path>
   S-->>P: エディタで diff を表示
@@ -456,13 +456,24 @@ sequenceDiagram
 
 ## 子エージェントへのプロンプト設計
 
-子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（Git 操作手順、質問フロー、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
+子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（質問フロー、Git 操作手順、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
+
+質問セクションを Git 操作より前に配置することで、子エージェントが曖昧な仕様を推測で実装する前に必ず質問するよう誘導している。
 
 ```
 {ユーザーが対話で決めたプロンプト}
 
 ---
 ## 作業ルール
+
+### 質問
+- 判断に迷ったり、仕様が不明確な場合は必ず質問すること。
+- 仕様に「何を」「どのように」が明確でない場合は、実装前に必ず質問すること。
+- 複数の解釈ができる仕様の場合は、質問して確認すること。
+- 質問せずに推測で実装することは禁止。迷ったら質問。
+- 質問は ~/.cursor-power/questions/{task-id}.json に以下の形式で書く:
+  { "taskId": "{task-id}", "question": "質問内容", "askedAt": "ISO 8601 日時" }
+- 質問ファイルを書いたら作業を中断し、回答を待つ。それ以上の作業はしないこと。
 
 ### Git 操作
 - 作業は必ず現在の worktree 内で行うこと。他のディレクトリに移動しない。
@@ -471,12 +482,7 @@ sequenceDiagram
   2. git commit（Conventional Commits 形式）
   3. git push -u origin HEAD
   4. gh pr create --base {baseBranch} でPRを作成
-
-### 質問
-- 判断に迷ったり、仕様が不明確な場合は必ず質問すること。
-- 質問は ~/.cursor-power/questions/{task-id}.json に以下の形式で書く:
-  { "taskId": "{task-id}", "question": "質問内容", "askedAt": "ISO 8601 日時" }
-- 質問ファイルを書いたら作業を中断し、回答を待つ。
+- PRのタイトルは Conventional Commits 形式にする。
 
 ### 禁止事項
 - main ブランチへの直接 push

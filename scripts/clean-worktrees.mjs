@@ -71,9 +71,9 @@ for (const task of tasks) {
   }
 
   const taskPath = join(TASKS_DIR, `${task.id}.json`);
-  if (prState === "CLOSED") {
+  if (prState === "CLOSED" || prState === "MERGED" || task.status === "done") {
     unlinkSync(taskPath);
-    result.actions.push("task JSON deleted (PR closed)");
+    result.actions.push(`task JSON deleted (${prState === "CLOSED" ? "PR closed" : prState === "MERGED" ? "PR merged" : "already done"})`);
   } else {
     task.status = "done";
     task.updatedAt = new Date().toISOString();

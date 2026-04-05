@@ -12,6 +12,8 @@ const { values } = parseArgs({
     repo: { type: "string" },
     base: { type: "string", default: "main" },
     model: { type: "string" },
+    type: { type: "string" },
+    title: { type: "string" },
   },
 });
 
@@ -45,14 +47,23 @@ const activeCount = existing.filter(
 const id = randomUUID().slice(0, 8);
 const now = new Date().toISOString();
 
+let branch;
+if (values.type && values.title) {
+  branch = `${values.type}/${values.title}-${id}`;
+} else {
+  branch = `task-${id}`;
+}
+
+const canStart = activeCount < maxConcurrency;
+
 const task = {
   id,
-  status: activeCount >= maxConcurrency ? "pending" : "pending",
+  status: "pending",
   prompt,
   planId: values.plan || null,
   sessionId: null,
   repoPath: values.repo,
-  branch: `task-${id}`,
+  branch,
   baseBranch: values.base,
   model: values.model || null,
   prUrl: null,
@@ -63,4 +74,4 @@ const task = {
 
 writeFileSync(join(TASKS_DIR, `${id}.json`), JSON.stringify(task, null, 2));
 
-console.log(JSON.stringify(task));
+console.log(JSON.stringify({ ...task, canStart }));

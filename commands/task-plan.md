@@ -1,13 +1,13 @@
 子エージェントに渡す仕様を対話で決める。親は仕様策定のみ行い実装しない。
 
-**背景**・**目的**・**対象ファイル**・**ベースブランチ**をまとめて聞く。承認後に保存→タスク登録→起動:
+**背景**・**目的**・**対象ファイル**・**ベースブランチ**をまとめて聞く。承認後にブランチの `--type`（Conventional Commits type）と `--title`（ケバブケース要約）を自動判定し、保存→タスク登録→起動:
 
 ```bash
 node ~/.cursor-power/scripts/save-plan.mjs --content "<仕様markdown>"
 ```
 
 ```bash
-node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>"
+node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>" --type "<type>" --title "<title>"
 ```
 
 ```bash
