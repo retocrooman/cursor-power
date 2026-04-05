@@ -8,7 +8,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH, PLANS_DIR } from "./paths.mjs";
+import { TASKS_DIR, CONFIG_PATH, PLANS_DIR, agentWorktreeLabel } from "./paths.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -58,7 +58,7 @@ const now = new Date().toISOString();
 
 let branch;
 if (values.type && values.title) {
-  branch = `${values.type}/${values.title}-${id}`;
+  branch = agentWorktreeLabel(`${values.type}/${values.title}-${id}`);
 } else {
   branch = `task-${id}`;
 }

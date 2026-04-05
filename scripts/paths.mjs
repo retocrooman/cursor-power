@@ -13,7 +13,7 @@ export const ACCEPTANCE_DIR = join(POWER_DIR, "acceptance");
 export const ISSUES_PATH = join(POWER_DIR, "issues.json");
 export const CONFIG_PATH = join(POWER_DIR, "config.json");
 
-/** `agent --worktree` の名前に `/` は使えない。Git ブランチ名はスラッシュのままにし、CLI に渡すときだけ置換する */
+/** `agent --worktree` の名前に `/` は使えない。ブランチ名もスラッシュなし（`type-title-id`）に統一するため、`add-task.mjs` でブランチ生成時にもこの関数を使う */
 export function agentWorktreeLabel(branch) {
   return String(branch).replace(/\//g, "-");
 }
