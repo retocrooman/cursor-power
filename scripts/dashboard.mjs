@@ -12,7 +12,7 @@ import { spawn } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
-import { CONFIG_PATH } from "./paths.mjs";
+import { CONFIG_PATH, ISSUES_PATH } from "./paths.mjs";
 import { getTaskStatuses } from "./task-reader.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -108,6 +108,21 @@ const HTML = /* html */ `<!DOCTYPE html>
   .empty { text-align: center; color: var(--muted); padding: 3rem 0; }
   .poll-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
   .poll-indicator.error { background: var(--red); }
+  .tabs { display: flex; gap: 0; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); }
+  .tab {
+    padding: .5rem 1.25rem; font-size: .9rem; font-weight: 500; cursor: pointer;
+    color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent;
+    transition: color .15s, border-color .15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-count {
+    font-size: .75rem; font-weight: 600; margin-left: .35rem;
+    background: var(--border); color: var(--text); padding: 1px 6px; border-radius: 999px;
+  }
+  .issue-text { color: var(--text); font-size: .875rem; line-height: 1.55; white-space: pre-wrap; }
+  .issue-id { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .85rem; color: var(--accent); }
+  .issue-meta { margin-top: .4rem; font-size: .8rem; color: var(--muted); }
   .card { cursor: pointer; }
 
   .modal-overlay {
@@ -149,8 +164,18 @@ const HTML = /* html */ `<!DOCTYPE html>
   <span class="poll-indicator" id="indicator" title="polling"></span>
   <span class="meta" id="updated"></span>
 </header>
-<div class="stats" id="stats"></div>
-<div class="card-list" id="tasks"></div>
+<div class="tabs">
+  <button class="tab active" data-tab="tasks" id="tab-tasks">タスク<span class="tab-count" id="task-count">0</span></button>
+  <button class="tab" data-tab="issues" id="tab-issues">Issues<span class="tab-count" id="issue-count">0</span></button>
+</div>
+<div id="panel-tasks">
+  <div class="stats" id="stats"></div>
+  <div class="card-list" id="tasks"></div>
+</div>
+<div id="panel-issues" style="display:none;">
+  <div class="stats" id="issue-stats"></div>
+  <div class="card-list" id="issues"></div>
+</div>
 
 <div class="modal-overlay" id="modal">
   <div class="modal-panel" id="modalPanel">
@@ -320,14 +345,64 @@ function escapeHtml(s) {
   return d.innerHTML;
 }
 
+function issuePreview(text) {
+  if (!text) return '';
+  var lines = text.split('\\n');
+  var preview = lines.slice(0, 3).join('\\n');
+  if (lines.length > 3) preview += ' …';
+  return preview;
+}
+
+function renderIssueStats(issues) {
+  var el = document.getElementById('issue-stats');
+  el.innerHTML = '<div class="stat">合計 <strong>' + issues.length + '</strong></div>';
+}
+
+function renderIssues(issues) {
+  var el = document.getElementById('issues');
+  if (issues.length === 0) {
+    el.innerHTML = '<div class="empty">Issues がありません</div>';
+    return;
+  }
+  var html = '';
+  for (var i = 0; i < issues.length; i++) {
+    var issue = issues[i];
+    html += '<div class="card">';
+    html += '<div class="card-header"><span class="issue-id">#' + escapeHtml(String(issue.id)) + '</span></div>';
+    html += '<div class="issue-text">' + escapeHtml(issuePreview(issue.text)) + '</div>';
+    html += '<div class="issue-meta">';
+    if (issue.createdAt) html += '<span>作成: ' + relativeTime(issue.createdAt) + '</span>';
+    html += '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+}
+
+var activeTab = 'tasks';
+
+document.querySelectorAll('.tab').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    activeTab = btn.getAttribute('data-tab');
+    document.querySelectorAll('.tab').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('panel-tasks').style.display = activeTab === 'tasks' ? '' : 'none';
+    document.getElementById('panel-issues').style.display = activeTab === 'issues' ? '' : 'none';
+  });
+});
+
 async function poll() {
   var ind = document.getElementById('indicator');
   try {
-    var res = await fetch('/api/status');
-    var data = await res.json();
-    _taskData = data;
-    renderStats(data);
-    renderTasks(data);
+    var results = await Promise.all([fetch('/api/status'), fetch('/api/issues')]);
+    var tasks = await results[0].json();
+    var issues = await results[1].json();
+    _taskData = tasks;
+    renderStats(tasks);
+    renderTasks(tasks);
+    renderIssueStats(issues);
+    renderIssues(issues);
+    document.getElementById('task-count').textContent = tasks.length;
+    document.getElementById('issue-count').textContent = issues.length;
     ind.className = 'poll-indicator';
     document.getElementById('updated').textContent = new Date().toLocaleTimeString();
   } catch (e) {
@@ -343,6 +418,14 @@ setInterval(poll, POLL_INTERVAL);
 
 // ---------- Server ----------
 
+function loadIssues() {
+  try {
+    return JSON.parse(readFileSync(ISSUES_PATH, "utf-8"));
+  } catch {
+    return [];
+  }
+}
+
 const server = createServer((req, res) => {
   if (req.method === "GET" && req.url === "/api/status") {
     const child = spawn(process.execPath, [join(__dirname, "sync-status.mjs")], {
@@ -352,6 +435,13 @@ const server = createServer((req, res) => {
     child.unref();
 
     const data = getTaskStatuses({ includeDone: false });
+    res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+    res.end(JSON.stringify(data));
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/api/issues") {
+    const data = loadIssues();
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(data));
     return;
