@@ -9,6 +9,7 @@ export const QUESTIONS_DIR = join(POWER_DIR, "questions");
 export const LOGS_DIR = join(POWER_DIR, "logs");
 export const PLANS_DIR = join(POWER_DIR, "plans");
 export const SCRIPTS_DIR = join(POWER_DIR, "scripts");
+export const ACCEPTANCE_DIR = join(POWER_DIR, "acceptance");
 export const CONFIG_PATH = join(POWER_DIR, "config.json");
 
 /** `agent --worktree` の名前に `/` は使えない。Git ブランチ名はスラッシュのままにし、CLI に渡すときだけ置換する */

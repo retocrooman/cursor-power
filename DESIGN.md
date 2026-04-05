@@ -119,6 +119,8 @@ flowchart TB
     <task-id>.log
   plans/                         # /task-plan で保存した仕様
     <plan-id>.md
+  acceptance/                    # 受け入れテストチェックリスト（親が手動配置）
+    <task-id>.json
   scripts/                       # Node.js ヘルパースクリプト
     paths.mjs                    # 共通パス定義
     prompt.mjs                   # 子エージェントへのプロンプト生成
@@ -133,6 +135,7 @@ flowchart TB
     check-questions.mjs          # 質問確認・回答書き込み
     send-answer.mjs              # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs          # worktree クリーンアップ
+    run-acceptance.mjs           # 受け入れテスト子の起動（別セッション）
     review-pr.mjs                # PR レビュー（ファイル一覧・diff）
     save-plan.mjs                # 仕様保存
     update-config.mjs            # 設定変更
@@ -153,6 +156,10 @@ stateDiagram-v2
   running --> blocked: 子が質問を書く
   blocked --> running: 親が回答を中継
   running --> pr_created: gh pr create 成功
+  running --> acceptance_running: 実装完了（acceptance有効時）
+  acceptance_running --> running: 合格→PR作成指示
+  acceptance_running --> fixing: 不合格
+  fixing --> running: 修正指示を中継
   pr_created --> done: /task-clean
   running --> failed: エラー終了
   blocked --> failed: タイムアウト等
@@ -163,6 +170,8 @@ stateDiagram-v2
 | `pending` | タスク登録済み、子エージェント未起動 |
 | `running` | 子エージェントが実行中 |
 | `blocked` | 子が質問を書いて応答待ち |
+| `acceptance_running` | 受け入れテスト子が検証中（`--acceptance` 付きタスクのみ） |
+| `fixing` | 受け入れテスト不合格、実装子が修正中（`running` と同様に並列枠を消費） |
 | `pr_created` | PR 作成済み、マージ待ち |
 | `done` | マージ完了、worktree 削除済み |
 | `failed` | エラーで終了 |
@@ -194,7 +203,7 @@ stateDiagram-v2
 | フィールド | 型 | 説明 |
 |-----------|-----|------|
 | `id` | string | 8文字の短縮 UUID |
-| `status` | enum | `pending`, `running`, `blocked`, `pr_created`, `done`, `failed` |
+| `status` | enum | `pending`, `running`, `blocked`, `acceptance_running`, `fixing`, `pr_created`, `done`, `failed` |
 | `prompt` | string | 子エージェントに渡すプロンプト |
 | `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
@@ -202,9 +211,13 @@ stateDiagram-v2
 | `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>/<title>-<id>` など。`agent --worktree` には `agentWorktreeLabel(branch)`（`/` を `-` にしたもの）だけを渡す） |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
+| `acceptance` | boolean | `true` の場合、PR 前に受け入れテストを実行する |
+| `acceptancePid` | number \| null | 受け入れテスト子エージェントの PID |
+| `acceptanceLogPath` | string \| null | 受け入れテスト子のログファイルパス |
 | `prUrl` | string \| null | 作成された PR の URL |
 | `worktreePath` | string \| null | worktree のパス |
 | `pid` | number \| null | 子エージェントプロセスの PID |
+| `riskScore` | object \| null | 安全度スコア（`{ impact, likelihood }`）。数値が大きいほど安全（5=問題なし・リスク低、1=リスク高）。詳細は後述 |
 | `logPath` | string \| null | ログファイルのパス |
 | `createdAt` | string | 作成日時（ISO 8601） |
 | `updatedAt` | string | 最終更新日時（ISO 8601） |
@@ -255,7 +268,8 @@ stateDiagram-v2
   "maxConcurrency": 3,
   "draftPR": false,
   "autoStartPending": true,
-  "dashboardPort": 3820
+  "dashboardPort": 3820,
+  "acceptanceByDefault": false
 }
 ```
 
@@ -266,6 +280,7 @@ stateDiagram-v2
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 | `autoStartPending` | boolean | `true` | 並列枠に空きが出たとき `pending` タスクを自動起動する |
 | `dashboardPort` | number | `3820` | Web ダッシュボードのデフォルトポート |
+| `acceptanceByDefault` | boolean | `false` | `true` にすると全タスクで受け入れテストをデフォルト有効にする |
 
 ## コマンド別処理フロー
 
@@ -500,6 +515,78 @@ sequenceDiagram
 | 並び順 | `updatedAt` 降順（API 側でソート） |
 | データ共有 | `task-reader.mjs` を `check-status.mjs` と共用 |
 
+### 受け入れテストフロー（`--acceptance` 付きタスクのみ）
+
+`--acceptance` フラグ付きで登録されたタスクは、実装完了後に PR を作成する前に受け入れテストを挟む。
+
+```mermaid
+sequenceDiagram
+  participant W as 実装子
+  participant SS as sync-status.mjs
+  participant RA as run-acceptance.mjs
+  participant AC as 受け入れ子
+  participant SA as send-answer.mjs
+
+  W->>W: 実装完了（commit & push）
+  W->>W: プロセス終了
+  SS->>SS: PID 確認 → 死亡検知
+  SS->>SS: acceptance=true & prUrl=null → acceptance_running
+  SS->>RA: run-acceptance.mjs --task-id <id>
+  RA->>AC: agent --print --yolo --worktree ... （別セッション）
+  AC->>AC: acceptance/<taskId>.json を読み取り
+  AC->>AC: 各項目を検証、checked/notes を更新
+  AC->>AC: result: "passed" or "failed" を書き込み
+  AC->>AC: プロセス終了
+  SS->>SS: acceptancePid 確認 → 死亡検知
+  alt 合格 (result: "passed")
+    SS->>SA: send-answer.mjs → 実装子に PR 作成を指示
+    SA->>W: agent --resume <sessionId> "PR を作成してください"
+    W->>W: gh pr create
+  else 不合格 (result: "failed")
+    SS->>SS: status → fixing
+    SS->>SA: send-answer.mjs → 実装子に修正を指示
+    SA->>W: agent --resume <sessionId> "acceptance を読んで修正せよ"
+    W->>W: 修正 → commit & push
+    W->>W: プロセス終了
+    Note right of SS: 再び受け入れ子を起動（ループ）
+  end
+```
+
+### 受け入れ JSON (`~/.cursor-power/acceptance/<task-id>.json`)
+
+親（ユーザー）が手動で作成する。受け入れ子がチェック結果を書き戻す。
+
+```json
+{
+  "items": [
+    {
+      "id": "1",
+      "text": "ログインフォームが表示される",
+      "checked": false,
+      "notes": ""
+    },
+    {
+      "id": "2",
+      "text": "バリデーションエラーが表示される",
+      "checked": false,
+      "notes": ""
+    }
+  ],
+  "result": null,
+  "updatedAt": null
+}
+```
+
+| フィールド | 型 | 説明 |
+|-----------|-----|------|
+| `items` | array | 受け入れ項目の配列 |
+| `items[].id` | string | 項目の識別子 |
+| `items[].text` | string | 検証内容の説明 |
+| `items[].checked` | boolean | 検証結果（`true` = 合格） |
+| `items[].notes` | string | 検証時の備考 |
+| `result` | `"passed"` \| `"failed"` \| null | 全体の結果（受け入れ子が書き込む） |
+| `updatedAt` | string \| null | 最終更新日時（ISO 8601） |
+
 ## 子エージェントへのプロンプト設計
 
 子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（質問フロー、Git 操作手順、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
@@ -541,10 +628,21 @@ sequenceDiagram
 
 子エージェントにはレポのコンテキストやアーキテクチャ情報は渡さない。`--workspace` で対象レポを指定するため、子エージェント自身がコードベースを探索して理解する。
 
+### リスクスコア（安全度スケール）
+
+子エージェントは PR 作成前に変更の安全度を `riskScore` として評価する。**数値が大きいほど安全**。
+
+| フィールド | 意味 | 1（リスク高） | 5（安全） |
+|-----------|------|-------------|----------|
+| `impact` | 影響の小ささ | 影響範囲が広く障害が重い可能性 | 局所的・影響は軽微で問題になりにくい |
+| `likelihood` | 発生しにくさ | 欠陥が入りやすく不確実 | バグが入る余地がほぼない |
+
+安全な変更では `impact=5, likelihood=5` を付ける。`/task-review` では「安全度: 影響の小ささ N/5, 発生しにくさ N/5」の形式で表示する。
+
 ## 並列実行の制御
 
 - `config.json` の `maxConcurrency` で上限を制御
-- `add-task.mjs` が起動前に `running` + `blocked` ステータスのタスク数を数え、上限に達していれば `pending` のまま待機
+- `add-task.mjs` が起動前に `running` + `blocked` + `fixing` + `acceptance_running` ステータスのタスク数を数え、上限に達していれば `pending` のまま待機
 - `start-worker.mjs` はバックグラウンドプロセスとして agent CLI を起動し、即座に制御を返す
 
 ### pending の自動起動（drain-pending）
@@ -552,7 +650,7 @@ sequenceDiagram
 `sync-status.mjs` がタスク状態を更新したあと、`drain-pending.mjs` をバックグラウンドで起動する。`drain-pending.mjs` は以下のロジックで `pending` タスクを自動起動する:
 
 1. `config.autoStartPending` が `false` なら何もしない
-2. `activeCount` = `running` + `blocked` の件数を算出
+2. `activeCount` = `running` + `blocked` + `fixing` + `acceptance_running` の件数を算出
 3. `freeSlots` = `maxConcurrency` − `activeCount`。0 以下なら終了
 4. `pending` タスクを `createdAt` 昇順（FIFO）でソート
 5. `freeSlots` 分だけ先頭から取り出し、各タスクの JSON を再読込して**まだ `pending`** のときだけ `start-worker.mjs` を `spawn`（detached）で実行

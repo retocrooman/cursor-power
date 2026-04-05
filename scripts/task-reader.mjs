@@ -55,6 +55,11 @@ export function getTaskStatuses({ includeDone = false, sort = "updatedAt_desc" }
     backfillSessionId(task);
     info.sessionId = task.sessionId || null;
 
+    if (task.acceptance) info.acceptance = true;
+    if (task.status === "acceptance_running") {
+      info.acceptancePid = task.acceptancePid || null;
+    }
+
     const questionPath = join(QUESTIONS_DIR, `${task.id}.json`);
     if (existsSync(questionPath)) {
       try {

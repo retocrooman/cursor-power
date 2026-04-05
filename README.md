@@ -11,6 +11,7 @@ Cursor Agent tab を並列実装ワーカーの実行基盤として使う最小
 - **ファイルベースの状態管理** — `~/.cursor-power/` にタスク状態・質問・設定を保存。DB 不要
 - **質問フロー** — 子エージェントが判断に迷ったらファイルに質問を書き、親経由でユーザーに確認
 - **PR 自動生成** — 子エージェントが commit → push → `gh pr create` まで完了
+- **受け入れテスト** — `--acceptance` フラグで PR 前の受け入れテストをオプトイン。別セッションの検証子がチェックリストを自動検証し、不合格なら修正ループを回す
 - **ブランチ名** — `/task-add` で `--type` と `--title` を付けた場合は Git ブランチを `<type>/<title>-<id>` のように付ける。`agent --worktree` のディレクトリ名に `/` は使えないため、CLI に渡すときだけ `-` に置き換える（ブランチ名そのものはスラッシュのまま）
 
 ## 前提条件
@@ -142,7 +143,31 @@ Agent: （LoginForm.tsx の diff をエディタで表示）
 Agent: 修正指示を task-a1b2 に送信しました。
 ```
 
-### 5. 完了後のクリーンアップ
+### 5. 受け入れテスト付きタスク（オプション）
+
+```
+ユーザー: /task-add ログインフォームの実装 --acceptance
+
+Agent: タスク a1b2 を開始しました（受け入れテスト付き）。
+       ~/.cursor-power/acceptance/a1b2.json にチェックリストを配置してください。
+```
+
+チェックリストの例（`~/.cursor-power/acceptance/a1b2.json`）:
+
+```json
+{
+  "items": [
+    { "id": "1", "text": "ログインフォームが表示される", "checked": false, "notes": "" },
+    { "id": "2", "text": "バリデーションエラーが表示される", "checked": false, "notes": "" }
+  ],
+  "result": null,
+  "updatedAt": null
+}
+```
+
+実装子が commit & push を完了すると、受け入れ子が自動で起動してチェックリストを検証します。全項目合格で PR が作成され、不合格なら `fixing` ステータスで実装子に修正指示が送られます。
+
+### 6. 完了後のクリーンアップ
 
 ```
 ユーザー: /task-clean
@@ -161,7 +186,8 @@ Agent: マージ済み worktree を削除:
   "maxConcurrency": 3,
   "draftPR": false,
   "autoStartPending": true,
-  "dashboardPort": 3820
+  "dashboardPort": 3820,
+  "acceptanceByDefault": false
 }
 ```
 
@@ -172,6 +198,7 @@ Agent: マージ済み worktree を削除:
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 | `autoStartPending` | boolean | `true` | `true` のとき、並列枠に空きが出たら `pending` タスクを FIFO で自動起動する |
 | `dashboardPort` | number | `3820` | Web ダッシュボードのデフォルトポート |
+| `acceptanceByDefault` | boolean | `false` | `true` にすると全タスクで受け入れテストをデフォルト有効にする |
 
 ## ディレクトリ構成
 
@@ -202,6 +229,8 @@ Agent: マージ済み worktree を削除:
     <task-id>.log
   plans/                     # /task-plan で保存した仕様
     <plan-id>.md
+  acceptance/                # 受け入れテストチェックリスト
+    <task-id>.json
   scripts/                   # ヘルパースクリプト
     paths.mjs                # 共通パス定義
     prompt.mjs               # 子エージェントへのプロンプト生成
@@ -216,6 +245,7 @@ Agent: マージ済み worktree を削除:
     check-questions.mjs      # 質問確認・回答書き込み
     send-answer.mjs          # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs      # worktree クリーンアップ
+    run-acceptance.mjs       # 受け入れテスト子の起動
     review-pr.mjs            # PR レビュー（ファイル一覧・diff）
     save-plan.mjs            # 仕様保存
     update-config.mjs        # 設定変更

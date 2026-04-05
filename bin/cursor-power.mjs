@@ -28,6 +28,7 @@ function install() {
   const questionsDir = join(powerDir, "questions");
   const logsDir = join(powerDir, "logs");
   const plansDir = join(powerDir, "plans");
+  const acceptanceDir = join(powerDir, "acceptance");
   const configPath = join(powerDir, "config.json");
 
   mkdirSync(commandsDir, { recursive: true });
@@ -36,6 +37,7 @@ function install() {
   mkdirSync(questionsDir, { recursive: true });
   mkdirSync(logsDir, { recursive: true });
   mkdirSync(plansDir, { recursive: true });
+  mkdirSync(acceptanceDir, { recursive: true });
 
   cpSync(join(pkgRoot, "commands"), commandsDir, {
     recursive: true,
@@ -75,4 +77,7 @@ function install() {
   console.log("Agent tab で /task-add, /task-plan, /task-promote, /task-list, /task-status, /task-check,");
   console.log("/task-review, /task-clean, /task-config, /issue-add, /issue-list, /dashboard, /tutorial が使えます。");
   console.log("\nWeb ダッシュボード: node ~/.cursor-power/scripts/dashboard.mjs (http://127.0.0.1:3820)");
+  console.log(
+    "\n受け入れテスト機能を使う場合は ~/.cursor-power/acceptance/<taskId>.json にチェックリストを配置してください。"
+  );
 }

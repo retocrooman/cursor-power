@@ -11,6 +11,7 @@ const DEFAULTS = {
   draftPR: false,
   autoStartPending: true,
   dashboardPort: 3820,
+  acceptanceByDefault: false,
 };
 
 const { values } = parseArgs({

@@ -2,8 +2,24 @@
 
 ## 0.5.0 (2026-04-05)
 
+### BREAKING CHANGES
+
+- **riskScore:** スケールの意味を反転 — **数値が大きいほど安全**（5=問題なし・リスク低、1=リスク高）に変更 (#12)
+  - `impact`: 旧「障害影響度（5=致命的）」→ 新「影響の小ささ（5=影響軽微で安全）」
+  - `likelihood`: 旧「障害発生率（5=非常に高い）」→ 新「発生しにくさ（5=バグが入りにくく安全）」
+  - JSON キー名 (`impact` / `likelihood`) は互換のため変更なし
+  - **注意:** v0.4.0 以前に付与された `riskScore` は旧スケール（5=リスク高）で記録されている可能性があります
+
 ### Features
 
+- **acceptance:** PR 前の受け入れテスト機能を追加（`--acceptance` フラグでオプトイン）(#11)
+  - `add-task.mjs` に `--acceptance` フラグを追加。タスク単位で受け入れテストを有効化
+  - `run-acceptance.mjs` を新規追加。受け入れ子を別セッションで起動し、チェックリストを自動検証
+  - 受け入れ合格で実装子に PR 作成を指示、不合格で `fixing` ステータスに遷移して修正ループ
+  - `~/.cursor-power/acceptance/<taskId>.json` に受け入れ項目（`items[]: { id, text, checked, notes }`, `result`, `updatedAt`）を定義
+- **status:** 新ステータス `fixing`（受け入れ不合格→修正中）と `acceptance_running`（受け入れテスト実行中）を追加
+- **config:** `acceptanceByDefault`（boolean、既定 `false`）を設定に追加。`true` で全タスクにデフォルト受け入れテストを有効化
+- **prompt:** リスクスコア定義に 1〜5 の各段階を明示する詳細な判断基準表を追加
 - **dashboard:** ローカル Web ダッシュボードを追加。Node 組み込み `http` モジュールのみで `127.0.0.1` にバインドし、タスク状態をブラウザでリアルタイム監視できる (#9)
 - **dashboard:** `config.json` の `dashboardPort`（既定 `3820`）+ `--port` CLI オプションでポート設定可能
 - **dashboard:** ダークテーマのカードレイアウト。各カードに id・status・PR URL（なければ「なし」）・プロンプト先頭1〜2行・sessionId の有無・updatedAt を表示
@@ -12,8 +28,13 @@
 
 ### Documentation
 
+- **task-review:** リスク表示を「安全度: 影響の小ささ N/5, 発生しにくさ N/5」に更新
+- DESIGN.md: タスク JSON スキーマに `riskScore` フィールドを追加、リスクスコアの定義表を追記
+- DESIGN.md: 状態遷移図に `fixing` / `acceptance_running` を追加、受け入れフローのシーケンス図・acceptance JSON スキーマを追記
 - DESIGN.md: `/dashboard` フロー図・仕様テーブルを追加、UI 仕様（カード構成・ソート・ポーリング間隔）を明記
+- README.md: 受け入れテストの使い方セクション、設定テーブルに `acceptanceByDefault` を追記
 - README.md: Web ダッシュボードセクション・コマンド表・設定テーブル・ディレクトリ構成を更新
+- commands/task-add.md, task-plan.md, task-promote.md: `--acceptance` オプションの説明を追記
 
 ## 0.4.0 (2026-04-05)
 
