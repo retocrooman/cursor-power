@@ -2,11 +2,17 @@
 
 ## 0.5.1 (2026-04-05)
 
+### BREAKING CHANGES
+
+- **close-issue:** `--close-issue` はタスク作成時に `issues.json` から即時削除しなくなった。代わりにタスク JSON に `closeIssueId` として紐づけ、`/task-clean` 実行時（PR マージ/クローズ後）に削除される
+
 ### Features
 
 - **install:** `cursor-power install` で既存 `config.json` の不足キーをデフォルト値で補完するシャローマージを実装 (#7)
   - 既存のユーザー設定値は保持し、パッケージ側で追加された新キーのみ補完
   - 新規インストール時の挙動は従来と同等
+- **task-clean:** タスク削除時に `closeIssueId` が設定されていれば `issues.json` から該当 issue を自動削除
+- **paths:** `ISSUES_PATH` 定数を `paths.mjs` に追加して共用化
 
 ### Refactoring
 
@@ -21,7 +27,10 @@
 
 ### Documentation
 
+- commands/task-add.md: `--close-issue` の説明を「task-clean 時に削除」に更新
+- commands/task-clean.md: issue 削除が走る旨を追記
 - README.md: install 説明にマージ動作の記述を追加、スクリプト一覧に `defaults.mjs` を追加
+- DESIGN.md: タスク JSON スキーマに `closeIssueId` フィールドを追記、シーケンス図を更新
 - DESIGN.md: ディレクトリ構成に `defaults.mjs` を追加
 - DESIGN.md: `/task-review` フロー図の説明に merge-base ベースの差分取得を追記
 

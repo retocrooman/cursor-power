@@ -213,6 +213,7 @@ stateDiagram-v2
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `acceptance` | boolean | `true` の場合、PR 前に受け入れテストを実行する |
+| `closeIssueId` | number \| null | `--close-issue` で紐づけた issue ID。task-clean 時に `issues.json` から削除される |
 | `acceptancePid` | number \| null | 受け入れテスト子エージェントの PID |
 | `acceptanceLogPath` | string \| null | 受け入れテスト子のログファイルパス |
 | `prUrl` | string \| null | 作成された PR の URL |
@@ -297,8 +298,7 @@ sequenceDiagram
 
   U->>P: /task-add ログイン画面の実装
   P->>S: node add-task.mjs --prompt "..." --repo /path --base main
-  S->>S: タスク JSON 生成（status: pending）
-  S->>S: --close-issue があれば issues.json から該当 issue を削除
+  S->>S: タスク JSON 生成（status: pending、--close-issue があれば closeIssueId を記録）
   S-->>P: タスク ID 返却
   P->>W: node start-worker.mjs --task-id a1b2c3d4
   W->>W: タスク JSON 更新（status: running）
@@ -382,6 +382,7 @@ sequenceDiagram
   S->>S: pr_created / done ステータスのタスクを取得
   S->>G: gh pr view で各 PR の状態確認
   S->>G: マージ済み or クローズ済みの worktree を git worktree remove
+  S->>S: closeIssueId があれば issues.json から該当 issue を削除
   S->>S: マージ済み → status: done / クローズ済み → タスク JSON 削除
   S-->>P: 削除結果
   P->>U: 削除した worktree 一覧を表示
