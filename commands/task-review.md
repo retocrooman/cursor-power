@@ -4,7 +4,7 @@
 node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 ```
 
-出力の prompt から背景・目的・ベースブランチを一文で要約。riskScore があれば概要直後に「リスク: 影響度 N/5, 発生率 N/5」（null なら「リスク: 未評価」）を表示。changedFiles を番号付きリストで表示（isNew=true → 「新規」、`+N / -N` で diffStat、変更内容を一言補足）:
+出力の prompt から背景・目的・ベースブランチを一文で要約。riskScore があれば「リスク: 影響度 N/5, 発生率 N/5」、null なら「リスク: 未評価」と表示。changedFiles を番号付きリストで表示（isNew=true → 「新規」、`+N / -N` で diffStat、変更内容を一言補足）:
 
 ```
 タスク 765e84e0 のレビュー (PR: URL)
