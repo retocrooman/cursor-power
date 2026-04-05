@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.1 (2026-04-05)
+
+### BREAKING CHANGES
+
+- **close-issue:** `--close-issue` はタスク作成時に `issues.json` から即時削除しなくなった。代わりにタスク JSON に `closeIssueId` として紐づけ、`/task-clean` 実行時（PR マージ/クローズ後）に削除される
+
+### Features
+
+- **task-clean:** タスク削除時に `closeIssueId` が設定されていれば `issues.json` から該当 issue を自動削除
+- **paths:** `ISSUES_PATH` 定数を `paths.mjs` に追加して共用化
+
+### Documentation
+
+- commands/task-add.md: `--close-issue` の説明を「task-clean 時に削除」に更新
+- commands/task-clean.md: issue 削除が走る旨を追記
+- DESIGN.md: タスク JSON スキーマに `closeIssueId` フィールドを追記、シーケンス図を更新
+
 ## 0.5.0 (2026-04-05)
 
 ### BREAKING CHANGES

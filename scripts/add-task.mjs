@@ -5,13 +5,10 @@ import {
   mkdirSync,
   readFileSync,
   readdirSync,
-  existsSync,
 } from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH, PLANS_DIR, POWER_DIR } from "./paths.mjs";
-
-const ISSUES_PATH = join(POWER_DIR, "issues.json");
+import { TASKS_DIR, CONFIG_PATH, PLANS_DIR } from "./paths.mjs";
 
 const { values } = parseArgs({
   options: {
@@ -70,6 +67,18 @@ const canStart = activeCount < maxConcurrency;
 
 const acceptance = values.acceptance || acceptanceByDefault;
 
+let closeIssueId = null;
+if (values["close-issue"]) {
+  const parsed = Number(values["close-issue"]);
+  if (Number.isNaN(parsed)) {
+    console.error(
+      JSON.stringify({ warning: `Invalid issue id: ${values["close-issue"]}` })
+    );
+  } else {
+    closeIssueId = parsed;
+  }
+}
+
 const task = {
   id,
   status: "pending",
@@ -81,6 +90,7 @@ const task = {
   baseBranch: values.base,
   model: values.model || null,
   acceptance,
+  closeIssueId,
   prUrl: null,
   worktreePath: null,
   createdAt: now,
@@ -88,29 +98,5 @@ const task = {
 };
 
 writeFileSync(join(TASKS_DIR, `${id}.json`), JSON.stringify(task, null, 2));
-
-if (values["close-issue"]) {
-  const issueId = Number(values["close-issue"]);
-  if (Number.isNaN(issueId)) {
-    console.error(
-      JSON.stringify({ warning: `Invalid issue id: ${values["close-issue"]}` })
-    );
-  } else if (!existsSync(ISSUES_PATH)) {
-    console.error(
-      JSON.stringify({ warning: `issues.json not found, skipping close-issue` })
-    );
-  } else {
-    const issues = JSON.parse(readFileSync(ISSUES_PATH, "utf-8"));
-    const idx = issues.findIndex((i) => i.id === issueId);
-    if (idx === -1) {
-      console.error(
-        JSON.stringify({ warning: `Issue #${issueId} not found` })
-      );
-    } else {
-      issues.splice(idx, 1);
-      writeFileSync(ISSUES_PATH, JSON.stringify(issues, null, 2));
-    }
-  }
-}
 
 console.log(JSON.stringify({ ...task, canStart }));
