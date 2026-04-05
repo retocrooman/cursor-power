@@ -280,6 +280,14 @@ node ~/.cursor-power/scripts/dashboard.mjs
 - [TODO.md](TODO.md) — 実装ロードマップ
 - [CHANGELOG.md](CHANGELOG.md) — 変更履歴（日付ベース。npm 版は `package.json` を参照）
 
+## 開発
+
+回帰チェック（`sync-status` / `run-acceptance` の前提が壊れていないことの静的検証）を実行:
+
+```bash
+npm run regression
+```
+
 ## コントリビューション
 
 Issue やプルリクエストを歓迎します。

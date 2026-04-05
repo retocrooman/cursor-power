@@ -4,6 +4,10 @@
 
 ## 2026-04-05
 
+### Chores
+
+- **regression:** add `npm run regression` static regression check script (#2)
+
 ### Features
 
 - **dashboard:** add acceptance_running badge color and short status labels
