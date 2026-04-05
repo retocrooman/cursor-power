@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.3 (2026-04-05)
+
+### Bug Fixes
+
+- **resume:** `send-answer.mjs` の `--worktree-base` フォールバック (`|| "main"`) を削除し、`start-worker.mjs` と統一。再開時に `baseBranch` がそのまま使われるようになった
+- **validation:** `send-answer.mjs` / `start-worker.mjs` の両方に `repoPath` / `branch` / `baseBranch` の必須フィールドチェックを追加。欠落時は明示的なエラーメッセージで終了する
+
+### Documentation
+
+- DESIGN.md: `/task-check` フロー図の `--resume` 呼び出しに worktree 引数を明記
+- DESIGN.md: リカバリセクションに `send-answer.mjs` が worktree コンテキストを維持する旨を追記
+
 ## 0.3.2 (2026-04-05)
 
 ### Bug Fixes
