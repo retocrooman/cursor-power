@@ -37,6 +37,8 @@ for (const task of tasks) {
   }
 
   if (task.sessionId) info.sessionId = task.sessionId;
+  if (task.acceptance) info.acceptance = true;
+  if (task.status === "acceptance_running") info.acceptancePid = task.acceptancePid || null;
 
   const questionPath = join(QUESTIONS_DIR, `${task.id}.json`);
   if (existsSync(questionPath)) {

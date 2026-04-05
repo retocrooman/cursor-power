@@ -43,6 +43,12 @@ node ~/.cursor-power/scripts/save-plan.mjs --content "<まとめた仕様のmark
 node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>" --type "<type>" --title "<title>"
 ```
 
+受け入れテストが必要な場合は `--acceptance` を付与する:
+
+```bash
+node ~/.cursor-power/scripts/add-task.mjs --plan <プランID> --repo "<ワークスペースパス>" --base "<ベースブランチ>" --type "<type>" --title "<title>" --acceptance
+```
+
 ```bash
 node ~/.cursor-power/scripts/start-worker.mjs --task-id <タスクID>
 ```
