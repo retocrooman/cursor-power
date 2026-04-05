@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.3 (2026-04-05)
+
+### Features
+
+- **task-add:** `--close-issue=<id>` オプションを追加。タスク作成と同時に対応する issue を `issues.json` から削除できる (#12)
+
 ## 0.3.2 (2026-04-05)
 
 ### Bug Fixes
