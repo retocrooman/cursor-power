@@ -122,6 +122,7 @@ flowchart TB
   acceptance/                    # 受け入れテストチェックリスト（親が手動配置）
     <task-id>.json
   scripts/                       # Node.js ヘルパースクリプト
+    defaults.mjs                 # 設定キーの既定値（install / update-config で共用）
     paths.mjs                    # 共通パス定義
     prompt.mjs                   # 子エージェントへのプロンプト生成
     add-task.mjs                 # タスク登録

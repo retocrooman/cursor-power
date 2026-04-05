@@ -35,7 +35,7 @@ cursor-power install
 
 1. `~/.cursor/commands/` にコマンドファイル（`.md`）を配置
 2. `~/.cursor-power/` に状態管理ディレクトリとスクリプトを作成
-3. `~/.cursor-power/config.json` にデフォルト設定を生成
+3. `~/.cursor-power/config.json` を生成または更新（既存の場合は不足キーのみ追加。ユーザーが設定した値は上書きしない）
 
 ## コマンド一覧
 
@@ -232,6 +232,7 @@ Agent: マージ済み worktree を削除:
   acceptance/                # 受け入れテストチェックリスト
     <task-id>.json
   scripts/                   # ヘルパースクリプト
+    defaults.mjs             # 設定キーの既定値（install / update-config で共用）
     paths.mjs                # 共通パス定義
     prompt.mjs               # 子エージェントへのプロンプト生成
     add-task.mjs             # タスク登録
