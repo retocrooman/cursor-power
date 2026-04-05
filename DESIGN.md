@@ -605,7 +605,7 @@ sequenceDiagram
 
 ## 子エージェントへのプロンプト設計
 
-子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（質問フロー、Git 操作手順、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。
+子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（質問フロー、リスクスコア評価、Git 操作手順、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。`acceptance` が有効な場合は PR 作成を省略し、commit & push で終了するよう指示する。
 
 質問セクションを Git 操作より前に配置することで、子エージェントが曖昧な仕様を推測で実装する前に必ず質問するよう誘導している。
 
@@ -624,13 +624,19 @@ sequenceDiagram
   { "taskId": "{task-id}", "question": "質問内容", "askedAt": "ISO 8601 日時" }
 - 質問ファイルを書いたら作業を中断し、回答を待つ。それ以上の作業はしないこと。
 
+### リスクスコア評価（安全度スケール — 数値が大きいほど安全）
+- PR作成前に、この変更の「影響の小ささ」と「発生しにくさ」をそれぞれ1〜5で評価すること。
+- 評価結果をタスクJSONファイル（~/.cursor-power/tasks/{task-id}.json）の riskScore フィールドに書き込むこと。
+- 形式: {"impact": 1-5, "likelihood": 1-5}
+
 ### Git 操作
 - 作業は必ず現在の worktree 内で行うこと。他のディレクトリに移動しない。
 - 作業が完了したら以下を順番に実行:
   1. git add で変更をステージ
   2. git commit（Conventional Commits 形式）
-  3. git push -u origin HEAD
-  4. gh pr create --base {baseBranch} でPRを作成
+  3. リスクスコア評価を実施し、タスクJSONに書き込む
+  4. git push -u origin HEAD
+  5. gh pr create --base {baseBranch} でPRを作成
 - PRのタイトルは Conventional Commits 形式にする。
 
 ### 禁止事項
@@ -639,6 +645,8 @@ sequenceDiagram
 - worktree 外のファイルの変更
 - 質問なしで曖昧な仕様を推測して実装すること
 ```
+
+`acceptance` が有効な場合は Git 操作セクションが異なり、手順 4（push）までで終了し PR 作成は行わない。受け入れテスト合格後に `sync-status.mjs` が `send-answer.mjs` 経由で PR 作成を指示する。
 
 回答中継時は `buildResumePrompt()` で簡潔なプロンプトを生成し、`agent --resume <session_id>` で子セッションに送信する。
 

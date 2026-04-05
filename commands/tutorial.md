@@ -146,12 +146,14 @@ main
 └──────────────┴────────────┴───────────────────────────────────┴──────────────┘
 
 ステータスの種類:
-  • pending     — タスク登録済み、まだ未着手
-  • running     — 子エージェントが作業中
-  • blocked     — 子エージェントが質問して回答待ち（/task-check で確認）
-  • pr_created  — PR が作成済み、レビュー待ち
-  • completed   — マージ完了
-  • failed      — エラーで停止
+  • pending              — タスク登録済み、まだ未着手
+  • running              — 子エージェントが作業中
+  • blocked              — 子エージェントが質問して回答待ち（/task-check で確認）
+  • acceptance_running   — 受け入れテスト実行中
+  • fixing               — 受け入れテスト不合格、修正中
+  • pr_created           — PR が作成済み、レビュー待ち
+  • done                 — マージ完了
+  • failed               — エラーで停止
 
 PR ができたようです！次はレビューしてみましょう。
 「次へ」と入力してください。
@@ -289,7 +291,7 @@ PR がマージされたら /task-clean でクリーンアップできます。
     - worktree 削除: ~/.cursor/worktrees/repo/task-xyz789
     - ブランチ削除: task-xyz789
     - 質問ファイル削除: ~/.cursor-power/questions/task-xyz789.json
-    - タスクステータス: completed に更新
+    - タスクステータス: done に更新
 
 未マージのタスクはスキップされます。安心して実行できます。
 ```
