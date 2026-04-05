@@ -201,7 +201,7 @@ Agent: マージ済み worktree を削除:
     start-worker.mjs         # 子エージェント起動
     list-tasks.mjs           # タスク一覧
     check-status.mjs         # ステータス確認（同期表示 + 非同期更新起動）
-    sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態）
+    sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態・sessionId 補完）
     check-questions.mjs      # 質問確認・回答書き込み
     send-answer.mjs          # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs      # worktree クリーンアップ

@@ -22,6 +22,20 @@ for (const task of tasks) {
 
   if (task.pid) info.processAlive = undefined;
   if (task.prUrl) info.prUrl = task.prUrl;
+
+  // Backfill sessionId from log if missing (sync phase)
+  if (!task.sessionId && task.logPath && existsSync(task.logPath)) {
+    try {
+      const log = readFileSync(task.logPath, "utf-8");
+      for (const line of log.split("\n")) {
+        try {
+          const parsed = JSON.parse(line);
+          if (parsed.session_id) { task.sessionId = parsed.session_id; break; }
+        } catch {}
+      }
+    } catch {}
+  }
+
   if (task.sessionId) info.sessionId = task.sessionId;
 
   const questionPath = join(QUESTIONS_DIR, `${task.id}.json`);

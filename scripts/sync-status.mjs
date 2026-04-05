@@ -53,6 +53,12 @@ try {
 for (const task of tasks) {
   let changed = false;
 
+  // Backfill sessionId from log regardless of status
+  if (!task.sessionId && task.logPath) {
+    updateFromLog(task);
+    if (task.sessionId) changed = true;
+  }
+
   if (task.status === "running" && task.pid) {
     const alive = isProcessAlive(task.pid);
 

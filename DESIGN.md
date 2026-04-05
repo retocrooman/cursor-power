@@ -300,6 +300,8 @@ sequenceDiagram
 
 check-status.mjs は同期フェーズ（即座にタスク JSON を読み取ってレスポンス）と非同期フェーズ（sync-status.mjs をバックグラウンドで起動して PID 確認・ログ解析・PR 状態を更新）に分離されている。
 
+同期フェーズでも `sessionId` が未設定のタスクはログから補完を試みるため、`/task-status` 実行時点で即座に `sessionId` を取得できる。非同期フェーズ（sync-status.mjs）でも同様にステータスに関係なく `sessionId` をバックフィルするため、`blocked` や `failed` のタスクでも回答中継（`send-answer.mjs`）に必要な `sessionId` が欠落しない。
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
@@ -335,7 +337,7 @@ sequenceDiagram
   P->>U: 質問を表示
   U->>P: 「環境変数で。.env.example も作って」
   P->>S: 質問 JSON に回答を書き込み
-  P->>C: agent --print --resume <session_id> "回答: ..."
+  P->>C: agent --print --yolo --worktree ... --workspace /path --model ... --resume <session_id> "回答: ..."
   P->>U: task-c3d4 に回答を送信しました
 ```
 
@@ -507,7 +509,7 @@ sequenceDiagram
 親 Agent tab のセッションが切れても、以下の情報から復帰可能:
 
 1. `~/.cursor-power/tasks/*.json` — 全タスクの状態
-2. 各タスクの `sessionId` — `agent --resume` で子セッション復帰
+2. 各タスクの `sessionId` — `agent --resume` で子セッション復帰（`send-answer.mjs` は初回起動と同じ `--workspace` / `--worktree` / `--worktree-base` / `--model` を付与して再開するため、再開後も正しい worktree で作業が継続される）
 3. worktree の実体 — `~/.cursor/worktrees/` に残っている
 
 新しい Agent tab セッションで `/task-list` を実行すれば、全タスクの現在状態を確認できる。`/task-check` で未回答の質問も拾える。
