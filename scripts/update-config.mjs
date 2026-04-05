@@ -9,6 +9,7 @@ const DEFAULTS = {
   defaultModel: "sonnet-4",
   maxConcurrency: 3,
   draftPR: false,
+  autoStartPending: true,
 };
 
 const { values } = parseArgs({
