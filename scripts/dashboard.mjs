@@ -71,22 +71,30 @@ const HTML = /* html */ `<!DOCTYPE html>
     border-radius: 8px; padding: 1rem; transition: border-color .15s;
   }
   .card:hover { border-color: var(--accent); }
-  .card-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; }
+  .card-header { display: flex; align-items: center; gap: .5rem; margin-bottom: .35rem; flex-wrap: wrap; }
   .task-id { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .85rem; color: var(--accent); }
   .badge {
     display: inline-block; font-size: .7rem; font-weight: 600;
-    padding: 2px 8px; border-radius: 999px; text-transform: uppercase;
+    padding: 2px 8px; border-radius: 999px; text-transform: uppercase; letter-spacing: .02em;
   }
   .badge-pending   { background: var(--muted); color: var(--bg); }
   .badge-running   { background: var(--green); color: var(--bg); }
   .badge-blocked   { background: var(--yellow); color: var(--bg); }
+  .badge-fixing    { background: var(--orange); color: var(--bg); }
   .badge-pr_created { background: var(--purple); color: var(--bg); }
   .badge-failed    { background: var(--red); color: #fff; }
   .badge-done      { background: var(--border); color: var(--text); }
-  .prompt { color: var(--text); font-size: .9rem; }
-  .details { margin-top: .5rem; font-size: .8rem; color: var(--muted); display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+  .prompt { color: var(--text); font-size: .875rem; line-height: 1.45; }
+  .details {
+    margin-top: .5rem; font-size: .8rem; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: .35rem 1rem;
+  }
   .details a { color: var(--accent); text-decoration: none; }
   .details a:hover { text-decoration: underline; }
+  .detail-label { color: var(--muted); }
+  .detail-value { color: var(--text); }
+  .detail-none  { color: var(--muted); font-style: italic; }
+  .session-short { font-family: ui-monospace, SFMono-Regular, monospace; font-size: .75rem; }
   .question-box {
     margin-top: .5rem; padding: .5rem .75rem; font-size: .8rem;
     background: rgba(210, 153, 34, .1); border-left: 3px solid var(--yellow);
@@ -107,7 +115,7 @@ const HTML = /* html */ `<!DOCTYPE html>
 <div class="card-list" id="tasks"></div>
 
 <script>
-const POLL_INTERVAL = 3000;
+var POLL_INTERVAL = 5000;
 
 function badge(status) {
   return '<span class="badge badge-' + status + '">' + status.replace('_', ' ') + '</span>';
@@ -115,47 +123,70 @@ function badge(status) {
 
 function relativeTime(iso) {
   if (!iso) return '';
-  const diff = Date.now() - new Date(iso).getTime();
-  const s = Math.floor(diff / 1000);
+  var diff = Date.now() - new Date(iso).getTime();
+  var s = Math.floor(diff / 1000);
   if (s < 60) return s + '秒前';
-  const m = Math.floor(s / 60);
+  var m = Math.floor(s / 60);
   if (m < 60) return m + '分前';
-  const h = Math.floor(m / 60);
+  var h = Math.floor(m / 60);
   if (h < 24) return h + '時間前';
   return Math.floor(h / 24) + '日前';
 }
 
+function promptPreview(text) {
+  if (!text) return '';
+  var lines = text.split('\\n').filter(function(l) { return l.trim() !== ''; });
+  var preview = lines.slice(0, 2).join('\\n');
+  if (lines.length > 2) preview += ' …';
+  return preview;
+}
+
+function shortSession(sid) {
+  if (!sid) return '<span class="detail-none">未設定</span>';
+  return '<span class="session-short">' + escapeHtml(sid.slice(0, 8)) + '</span>';
+}
+
 function renderStats(tasks) {
-  const counts = {};
-  for (const t of tasks) counts[t.status] = (counts[t.status] || 0) + 1;
-  const el = document.getElementById('stats');
-  el.innerHTML = '<div class="stat">合計 <strong>' + tasks.length + '</strong></div>' +
-    Object.entries(counts).map(function(e) {
-      return '<div class="stat">' + badge(e[0]) + ' <strong>' + e[1] + '</strong></div>';
-    }).join('');
+  var counts = {};
+  for (var i = 0; i < tasks.length; i++) counts[tasks[i].status] = (counts[tasks[i].status] || 0) + 1;
+  var el = document.getElementById('stats');
+  var html = '<div class="stat">合計 <strong>' + tasks.length + '</strong></div>';
+  var entries = Object.entries(counts);
+  for (var j = 0; j < entries.length; j++) {
+    html += '<div class="stat">' + badge(entries[j][0]) + ' <strong>' + entries[j][1] + '</strong></div>';
+  }
+  el.innerHTML = html;
 }
 
 function renderTasks(tasks) {
-  const el = document.getElementById('tasks');
+  var el = document.getElementById('tasks');
   if (tasks.length === 0) {
     el.innerHTML = '<div class="empty">タスクがありません</div>';
     return;
   }
-  el.innerHTML = tasks.map(function(t) {
-    var html = '<div class="card"><div class="card-header"><span class="task-id">' + t.id + '</span>' + badge(t.status) + '</div>';
-    html += '<div class="prompt">' + escapeHtml(t.prompt || '') + '</div>';
+  var html = '';
+  for (var i = 0; i < tasks.length; i++) {
+    var t = tasks[i];
+    html += '<div class="card">';
+    html += '<div class="card-header"><span class="task-id">' + escapeHtml(t.id) + '</span>' + badge(t.status) + '</div>';
+    html += '<div class="prompt">' + escapeHtml(promptPreview(t.prompt)) + '</div>';
     html += '<div class="details">';
-    if (t.branch) html += '<span>branch: ' + escapeHtml(t.branch) + '</span>';
-    if (t.prUrl) html += '<a href="' + escapeHtml(t.prUrl) + '" target="_blank" rel="noopener">PR</a>';
-    if (t.updatedAt) html += '<span>更新: ' + relativeTime(t.updatedAt) + '</span>';
-    if (t.createdAt) html += '<span>作成: ' + relativeTime(t.createdAt) + '</span>';
+    html += '<span><span class="detail-label">PR:</span> ';
+    if (t.prUrl) {
+      html += '<a href="' + escapeHtml(t.prUrl) + '" target="_blank" rel="noopener">' + escapeHtml(t.prUrl.replace(/^https:\\/\\/github\\.com\\//, '')) + '</a>';
+    } else {
+      html += '<span class="detail-none">なし</span>';
+    }
+    html += '</span>';
+    html += '<span><span class="detail-label">session:</span> ' + shortSession(t.sessionId) + '</span>';
+    if (t.updatedAt) html += '<span><span class="detail-label">更新:</span> <span class="detail-value">' + relativeTime(t.updatedAt) + '</span></span>';
     html += '</div>';
     if (t.blocked && t.question) {
       html += '<div class="question-box">質問: ' + escapeHtml(t.question) + '</div>';
     }
     html += '</div>';
-    return html;
-  }).join('');
+  }
+  el.innerHTML = html;
 }
 
 function escapeHtml(s) {

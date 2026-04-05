@@ -485,7 +485,7 @@ sequenceDiagram
   D-->>P: http://127.0.0.1:3820
   P->>U: ダッシュボード URL を案内
   B->>D: GET /（HTML）
-  B->>D: GET /api/status（ポーリング、3秒間隔）
+  B->>D: GET /api/status（ポーリング、5秒間隔）
   D->>D: task-reader.mjs でタスク JSON 読み取り
   D-->>B: タスク一覧 JSON
 ```
@@ -494,7 +494,10 @@ sequenceDiagram
 |------|------|
 | バインド | `127.0.0.1` のみ（ローカル専用） |
 | ポート | `config.json` の `dashboardPort`（既定 `3820`）。`--port` で上書き可 |
-| リアルタイム | ブラウザ側ポーリング（3秒間隔、`fetch('/api/status')`） |
+| リアルタイム | ブラウザ側ポーリング（5秒間隔、`fetch('/api/status')`） |
+| レイアウト | 1タスク＝1カード。ダークテーマ |
+| カード表示 | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
+| 並び順 | `updatedAt` 降順（API 側でソート） |
 | データ共有 | `task-reader.mjs` を `check-status.mjs` と共用 |
 
 ## 子エージェントへのプロンプト設計

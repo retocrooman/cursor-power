@@ -38,7 +38,7 @@ function backfillSessionId(task) {
  * Build status summaries identical to what check-status.mjs outputs.
  * Returned array is used by both the CLI and the dashboard API.
  */
-export function getTaskStatuses({ includeDone = false } = {}) {
+export function getTaskStatuses({ includeDone = false, sort = "updatedAt_desc" } = {}) {
   const tasks = readTasks({ includeDone });
   const results = [];
 
@@ -46,14 +46,14 @@ export function getTaskStatuses({ includeDone = false } = {}) {
     const info = { id: task.id, status: task.status, prompt: task.prompt };
 
     if (task.pid) info.processAlive = undefined;
-    if (task.prUrl) info.prUrl = task.prUrl;
+    info.prUrl = task.prUrl || null;
     if (task.branch) info.branch = task.branch;
     if (task.repoPath) info.repoPath = task.repoPath;
     if (task.createdAt) info.createdAt = task.createdAt;
     if (task.updatedAt) info.updatedAt = task.updatedAt;
 
     backfillSessionId(task);
-    if (task.sessionId) info.sessionId = task.sessionId;
+    info.sessionId = task.sessionId || null;
 
     const questionPath = join(QUESTIONS_DIR, `${task.id}.json`);
     if (existsSync(questionPath)) {
@@ -67,6 +67,14 @@ export function getTaskStatuses({ includeDone = false } = {}) {
     }
 
     results.push(info);
+  }
+
+  if (sort === "updatedAt_desc") {
+    results.sort((a, b) => {
+      const ta = a.updatedAt ? new Date(a.updatedAt).getTime() : 0;
+      const tb = b.updatedAt ? new Date(b.updatedAt).getTime() : 0;
+      return tb - ta;
+    });
   }
 
   return results;

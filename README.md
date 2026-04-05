@@ -230,8 +230,11 @@ Agent: マージ済み worktree を削除:
 node ~/.cursor-power/scripts/dashboard.mjs
 ```
 
-`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新表示されます。
+`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（5秒間隔）表示されます。
 
+- **レイアウト**: ダークテーマ、1タスク＝1カード
+- **カード表示**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt
+- **並び順**: `updatedAt` 降順（新しい更新が上）
 - ポート変更: `--port 8080`
 - デフォルトポートは `config.json` の `dashboardPort` で設定可能
 - バインドは `127.0.0.1` のみ（ローカル専用）
