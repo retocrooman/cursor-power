@@ -265,6 +265,7 @@ node ~/.cursor-power/scripts/dashboard.mjs
 
 - **レイアウト**: ダークテーマ、1タスク＝1カード
 - **カード表示**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt
+- **カード詳細モーダル**: カードをクリックすると prompt 全文・メタ情報（PR URL, sessionId, branch, repo, 日時など）を表示。×ボタン・Esc・オーバーレイクリックで閉じる
 - **並び順**: `updatedAt` 降順（新しい更新が上）
 - ポート変更: `--port 8080`
 - デフォルトポートは `config.json` の `dashboardPort` で設定可能

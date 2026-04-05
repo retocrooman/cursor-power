@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.3 (2026-04-05)
+
+### Features
+
+- **dashboard:** カードクリックで詳細モーダルを表示。prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・作成日時・更新日時・受け入れテスト状態・blocked 時の質問全文を確認可能
+- **dashboard:** モーダルは×ボタン・Esc キー・オーバーレイクリックで閉じられる
+- **dashboard:** カード内の PR リンクなどクリック時はイベント伝播を停止し、モーダルが誤って開かない
+
+### Documentation
+
+- DESIGN.md: ダッシュボード仕様テーブルにカード詳細モーダルの仕様を追記
+- README.md: Web ダッシュボードセクションにカード詳細モーダルの説明を追記
+- commands/dashboard.md: モーダル機能の説明を追記
+
 ## 0.5.2 (2026-04-05)
 
 ### Features

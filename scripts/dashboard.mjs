@@ -108,6 +108,39 @@ const HTML = /* html */ `<!DOCTYPE html>
   .empty { text-align: center; color: var(--muted); padding: 3rem 0; }
   .poll-indicator { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; }
   .poll-indicator.error { background: var(--red); }
+  .card { cursor: pointer; }
+
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; visibility: hidden; transition: opacity .15s, visibility .15s;
+  }
+  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal-panel {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    width: 90%; max-width: 640px; max-height: 80vh; overflow-y: auto;
+    padding: 1.5rem; position: relative;
+  }
+  .modal-close {
+    position: absolute; top: .75rem; right: .75rem;
+    background: none; border: none; color: var(--muted); font-size: 1.25rem;
+    cursor: pointer; line-height: 1; padding: 4px 8px; border-radius: 4px;
+  }
+  .modal-close:hover { color: var(--text); background: var(--border); }
+  .modal-title { display: flex; align-items: center; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .modal-section { margin-bottom: 1rem; }
+  .modal-section:last-child { margin-bottom: 0; }
+  .modal-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: .25rem; }
+  .modal-value { font-size: .875rem; color: var(--text); line-height: 1.5; }
+  .modal-value a { color: var(--accent); text-decoration: none; }
+  .modal-value a:hover { text-decoration: underline; }
+  .modal-prompt { white-space: pre-wrap; word-break: break-word; font-size: .875rem; line-height: 1.6; color: var(--text); }
+  .modal-meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; }
+  .modal-question {
+    padding: .5rem .75rem; font-size: .85rem;
+    background: rgba(210, 153, 34, .1); border-left: 3px solid var(--yellow);
+    border-radius: 4px; color: var(--yellow); white-space: pre-wrap; word-break: break-word;
+  }
 </style>
 </head>
 <body>
@@ -119,8 +152,16 @@ const HTML = /* html */ `<!DOCTYPE html>
 <div class="stats" id="stats"></div>
 <div class="card-list" id="tasks"></div>
 
+<div class="modal-overlay" id="modal">
+  <div class="modal-panel" id="modalPanel">
+    <button class="modal-close" id="modalClose" title="閉じる">&times;</button>
+    <div id="modalBody"></div>
+  </div>
+</div>
+
 <script>
 var POLL_INTERVAL = 10000;
+var _taskData = [];
 
 function badge(status) {
   return '<span class="badge badge-' + status + '">' + status.replace('_', ' ') + '</span>';
@@ -136,6 +177,11 @@ function relativeTime(iso) {
   var h = Math.floor(m / 60);
   if (h < 24) return h + '時間前';
   return Math.floor(h / 24) + '日前';
+}
+
+function formatDateTime(iso) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('ja-JP'); } catch { return escapeHtml(iso); }
 }
 
 function promptPreview(text) {
@@ -172,7 +218,7 @@ function renderTasks(tasks) {
   var html = '';
   for (var i = 0; i < tasks.length; i++) {
     var t = tasks[i];
-    html += '<div class="card">';
+    html += '<div class="card" data-task-id="' + escapeHtml(t.id) + '">';
     html += '<div class="card-header"><span class="task-id">' + escapeHtml(t.id) + '</span>' + badge(t.status) + '</div>';
     html += '<div class="prompt">' + escapeHtml(promptPreview(t.prompt)) + '</div>';
     html += '<div class="details">';
@@ -194,6 +240,80 @@ function renderTasks(tasks) {
   el.innerHTML = html;
 }
 
+/* ---------- Modal ---------- */
+
+var modalOverlay = null;
+var modalBody = null;
+
+function openModal(task) {
+  if (!modalOverlay) {
+    modalOverlay = document.getElementById('modal');
+    modalBody = document.getElementById('modalBody');
+  }
+  modalBody.innerHTML = buildModalContent(task);
+  modalOverlay.classList.add('open');
+}
+
+function closeModal() {
+  if (modalOverlay) modalOverlay.classList.remove('open');
+}
+
+function buildModalContent(t) {
+  var h = '';
+  h += '<div class="modal-title"><span class="task-id" style="font-size:1rem">' + escapeHtml(t.id) + '</span>' + badge(t.status) + '</div>';
+
+  h += '<div class="modal-section"><div class="modal-label">Prompt</div>';
+  h += '<div class="modal-prompt">' + escapeHtml(t.prompt || '') + '</div></div>';
+
+  h += '<div class="modal-section"><div class="modal-label">メタ情報</div><div class="modal-meta-grid">';
+
+  h += metaItem('PR URL', t.prUrl
+    ? '<a href="' + escapeHtml(t.prUrl) + '" target="_blank" rel="noopener">' + escapeHtml(t.prUrl) + '</a>'
+    : '<span class="detail-none">なし</span>');
+  h += metaItem('Session ID', t.sessionId ? escapeHtml(t.sessionId) : '<span class="detail-none">未設定</span>');
+  h += metaItem('Branch', t.branch ? escapeHtml(t.branch) : '—');
+  h += metaItem('Repo', t.repoPath ? escapeHtml(t.repoPath) : '—');
+  h += metaItem('作成日時', formatDateTime(t.createdAt));
+  h += metaItem('更新日時', formatDateTime(t.updatedAt));
+  if (t.acceptance) h += metaItem('受け入れテスト', '有効');
+  if (t.acceptancePid) h += metaItem('受け入れ PID', '' + t.acceptancePid);
+
+  h += '</div></div>';
+
+  if (t.blocked && t.question) {
+    h += '<div class="modal-section"><div class="modal-label">質問（blocked）</div>';
+    h += '<div class="modal-question">' + escapeHtml(t.question) + '</div></div>';
+  }
+
+  return h;
+}
+
+function metaItem(label, valueHtml) {
+  return '<div><div class="modal-label">' + escapeHtml(label) + '</div><div class="modal-value">' + valueHtml + '</div></div>';
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.closest('a')) return;
+  var card = e.target.closest('.card[data-task-id]');
+  if (card) {
+    var id = card.getAttribute('data-task-id');
+    var task = _taskData.find(function(t) { return t.id === id; });
+    if (task) openModal(task);
+    return;
+  }
+  if (modalOverlay && modalOverlay.classList.contains('open')) {
+    if (e.target === modalOverlay || e.target.id === 'modalClose' || e.target.closest('#modalClose')) {
+      closeModal();
+    }
+  }
+});
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeModal();
+});
+
+/* ---------- Polling ---------- */
+
 function escapeHtml(s) {
   var d = document.createElement('div');
   d.appendChild(document.createTextNode(s));
@@ -205,6 +325,7 @@ async function poll() {
   try {
     var res = await fetch('/api/status');
     var data = await res.json();
+    _taskData = data;
     renderStats(data);
     renderTasks(data);
     ind.className = 'poll-indicator';

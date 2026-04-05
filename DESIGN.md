@@ -522,6 +522,7 @@ sequenceDiagram
 | リアルタイム | ブラウザ側ポーリング（10秒間隔、`fetch('/api/status')`）。ポーリングのたびに `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を更新 |
 | レイアウト | 1タスク＝1カード。ダークテーマ |
 | カード表示 | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
+| カード詳細モーダル | カードクリックで prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・createdAt・updatedAt・受け入れテスト状態・質問全文を表示。×ボタン・Esc・オーバーレイクリックで閉じる。カード内リンクはイベント伝播を停止しモーダルを開かない |
 | 並び順 | `updatedAt` 降順（API 側でソート） |
 | データ共有 | `task-reader.mjs` を `check-status.mjs` と共用 |
 

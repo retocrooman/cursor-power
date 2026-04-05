@@ -9,3 +9,4 @@ node ~/.cursor-power/scripts/dashboard.mjs
 - ポートを変更したい場合は `--port <番号>` を付ける。
 - `~/.cursor-power/config.json` の `dashboardPort` でデフォルトポートを設定できる。
 - ダッシュボードは `/task-status`（`check-status.mjs`）と同じデータソースを使用する。
+- カードをクリックすると詳細モーダルが開き、prompt 全文・PR URL・sessionId・branch・日時などのメタ情報を確認できる。モーダルは×ボタン・Esc・オーバーレイクリックで閉じる。
