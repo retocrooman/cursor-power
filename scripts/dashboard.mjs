@@ -129,9 +129,10 @@ const HTML = /* html */ `<!DOCTYPE html>
   .modal-overlay {
     position: fixed; inset: 0; background: rgba(0,0,0,.6);
     display: flex; align-items: center; justify-content: center;
-    z-index: 1000; opacity: 0; visibility: hidden; transition: opacity .15s, visibility .15s;
+    z-index: 1000; opacity: 0; visibility: hidden; pointer-events: none;
+    transition: opacity .15s, visibility .15s;
   }
-  .modal-overlay.open { opacity: 1; visibility: visible; }
+  .modal-overlay.open { opacity: 1; visibility: visible; pointer-events: auto; }
   .modal-panel {
     background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
     width: 90%; max-width: 640px; max-height: 80vh; overflow-y: auto;
