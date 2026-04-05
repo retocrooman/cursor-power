@@ -209,7 +209,7 @@ stateDiagram-v2
 | `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
 | `repoPath` | string | 対象リポジトリの絶対パス |
-| `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>/<title>-<id>` など。`agent --worktree` には `agentWorktreeLabel(branch)`（`/` を `-` にしたもの）だけを渡す） |
+| `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>-<title>-<id>`）。Git ブランチ名と `agent --worktree` ラベルが同一になるようスラッシュなしで統一 |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `acceptance` | boolean | `true` の場合、PR 前に受け入れテストを実行する |

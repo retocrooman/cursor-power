@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.2 (2026-04-05)
+
+### Refactoring
+
+- **branch:** タスク JSON の `branch` をスラッシュなし（`<type>-<title>-<id>`）に統一。`add-task.mjs` で `agentWorktreeLabel()` を使い、Git ブランチ名・`agent --worktree` ラベル・タスク JSON が同一文字列になるよう修正
+
+### Documentation
+
+- DESIGN.md: `branch` フィールドの説明をスラッシュなし形式に更新
+- README.md: ブランチ名の説明をスラッシュなし統一に更新
+- commands/task-add.md: ブランチ名生成の説明を更新
+- scripts/paths.mjs: `agentWorktreeLabel` のコメントを更新
+
 ## 0.5.1 (2026-04-05)
 
 ### BREAKING CHANGES
