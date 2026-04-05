@@ -3,6 +3,7 @@ import { cpSync, mkdirSync, existsSync, writeFileSync, readFileSync } from "node
 import { join, dirname } from "node:path";
 import { homedir } from "node:os";
 import { fileURLToPath } from "node:url";
+import { DEFAULTS } from "../scripts/defaults.mjs";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const pkgRoot = join(__dirname, "..");
@@ -60,17 +61,23 @@ function install() {
   }
 
   if (!existsSync(configPath)) {
-    writeFileSync(
-      configPath,
-      JSON.stringify(
-        { defaultModel: "sonnet-4", maxConcurrency: 3 },
-        null,
-        2
-      )
-    );
+    writeFileSync(configPath, JSON.stringify(DEFAULTS, null, 2) + "\n");
     console.log(`config   -> ${configPath}`);
   } else {
-    console.log(`config   -> ${configPath} (既存のため上書きなし)`);
+    const existing = JSON.parse(readFileSync(configPath, "utf-8"));
+    let added = 0;
+    for (const key of Object.keys(DEFAULTS)) {
+      if (!(key in existing)) {
+        existing[key] = DEFAULTS[key];
+        added++;
+      }
+    }
+    if (added > 0) {
+      writeFileSync(configPath, JSON.stringify(existing, null, 2) + "\n");
+      console.log(`config   -> ${configPath} (${added} 件の新規キーを追加)`);
+    } else {
+      console.log(`config   -> ${configPath} (変更なし)`);
+    }
   }
 
   console.log(`\ncursor-power v${pkg.version} インストール完了。`);

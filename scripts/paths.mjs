@@ -12,6 +12,7 @@ export const SCRIPTS_DIR = join(POWER_DIR, "scripts");
 export const ACCEPTANCE_DIR = join(POWER_DIR, "acceptance");
 export const ISSUES_PATH = join(POWER_DIR, "issues.json");
 export const CONFIG_PATH = join(POWER_DIR, "config.json");
+export const ISSUES_PATH = join(POWER_DIR, "issues.json");
 
 /** `agent --worktree` の名前に `/` は使えない。Git ブランチ名はスラッシュのままにし、CLI に渡すときだけ置換する */
 export function agentWorktreeLabel(branch) {

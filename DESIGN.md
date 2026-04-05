@@ -122,6 +122,7 @@ flowchart TB
   acceptance/                    # 受け入れテストチェックリスト（親が手動配置）
     <task-id>.json
   scripts/                       # Node.js ヘルパースクリプト
+    defaults.mjs                 # 設定キーの既定値（install / update-config で共用）
     paths.mjs                    # 共通パス定義
     prompt.mjs                   # 子エージェントへのプロンプト生成
     add-task.mjs                 # タスク登録
@@ -212,6 +213,7 @@ stateDiagram-v2
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `acceptance` | boolean | `true` の場合、PR 前に受け入れテストを実行する |
+| `closeIssueId` | number \| null | `--close-issue` で紐づけた issue ID。task-clean 時に `issues.json` から削除される |
 | `acceptancePid` | number \| null | 受け入れテスト子エージェントの PID |
 | `acceptanceLogPath` | string \| null | 受け入れテスト子のログファイルパス |
 | `prUrl` | string \| null | 作成された PR の URL |
@@ -296,8 +298,7 @@ sequenceDiagram
 
   U->>P: /task-add ログイン画面の実装
   P->>S: node add-task.mjs --prompt "..." --repo /path --base main
-  S->>S: タスク JSON 生成（status: pending）
-  S->>S: --close-issue があれば issues.json から該当 issue を削除
+  S->>S: タスク JSON 生成（status: pending、--close-issue があれば closeIssueId を記録）
   S-->>P: タスク ID 返却
   P->>W: node start-worker.mjs --task-id a1b2c3d4
   W->>W: タスク JSON 更新（status: running）
@@ -381,6 +382,7 @@ sequenceDiagram
   S->>S: pr_created / done ステータスのタスクを取得
   S->>G: gh pr view で各 PR の状態確認
   S->>G: マージ済み or クローズ済みの worktree を git worktree remove
+  S->>S: closeIssueId があれば issues.json から該当 issue を削除
   S->>S: マージ済み → status: done / クローズ済み → タスク JSON 削除
   S-->>P: 削除結果
   P->>U: 削除した worktree 一覧を表示
@@ -414,6 +416,12 @@ sequenceDiagram
 
 ### `/task-review [タスクID]`
 
+差分の基準は `git merge-base ${baseBranch} HEAD`（merge-base）を使用する。これにより `baseBranch` がリモートで進んでいても、GitHub PR の Files changed と同じファイル集合・差分が表示される。
+
+- `getChangedFiles` / `getDiffStat`: `mergeBase..HEAD` で差分を取得
+- `--action diff`: 左ペインは `git show ${mergeBase}:${file}` の内容
+- `isNew` 判定: `mergeBase` 時点にファイルが存在するかで判定
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
@@ -423,11 +431,12 @@ sequenceDiagram
 
   U->>P: /task-review task-a1b2
   P->>S: node review-pr.mjs --task-id a1b2
+  S->>S: mergeBase = git merge-base ${baseBranch} HEAD
   S-->>P: prompt + changedFiles（diffStat 付き、自動生成ファイル除外）
   P->>U: タスク概要 + ファイル一覧を表示（+N / -N, 新規判定）
   U->>P: ファイル番号を選択
   P->>S: node review-pr.mjs --task-id a1b2 --action diff --file <path>
-  S-->>P: エディタで diff を表示
+  S-->>P: エディタで diff を表示（左ペイン = mergeBase 時点）
   U->>P: 修正指示
   P->>A: node send-answer.mjs --task-id a1b2 --answer "修正指示"
   P->>U: 修正指示を送信しました
@@ -500,8 +509,9 @@ sequenceDiagram
   D-->>P: http://127.0.0.1:3820
   P->>U: ダッシュボード URL を案内
   B->>D: GET /（HTML）
-  B->>D: GET /api/status（ポーリング、5秒間隔）
-  B->>D: GET /api/issues（ポーリング、5秒間隔）
+  B->>D: GET /api/status（ポーリング、10秒間隔）
+  B->>D: GET /api/issues（ポーリング、10秒間隔）
+  D->>D: GET /api/status のたびに sync-status.mjs を detached で起動（PID・ログ・PR 状態を更新）
   D->>D: task-reader.mjs でタスク JSON 読み取り
   D->>D: issues.json を読み取り
   D-->>B: タスク一覧 JSON / Issue 一覧 JSON
@@ -511,11 +521,12 @@ sequenceDiagram
 |------|------|
 | バインド | `127.0.0.1` のみ（ローカル専用） |
 | ポート | `config.json` の `dashboardPort`（既定 `3820`）。`--port` で上書き可 |
-| リアルタイム | ブラウザ側ポーリング（5秒間隔、`/api/status` と `/api/issues` を並行取得） |
+| リアルタイム | ブラウザ側ポーリング（10秒間隔、`/api/status` と `/api/issues` を並行取得）。`/api/status` のたびに `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を更新 |
 | タブ切り替え | ヘッダー下にタブ（「タスク」/「Issues」）。アクティブタブに応じて stats + カード一覧を切り替え |
 | レイアウト | 1タスク＝1カード / 1 issue＝1カード。ダークテーマ |
 | タスクカード | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
 | Issue カード | id（`#N`）, 本文プレビュー（先頭3行）, createdAt（相対時間） |
+| カード詳細モーダル | タスクカードをクリックで prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・createdAt・updatedAt・受け入れテスト状態・質問全文を表示。×ボタン・Esc・オーバーレイクリックで閉じる。カード内リンクはイベント伝播を停止しモーダルを開かない |
 | 並び順 | タスク: `updatedAt` 降順（API 側でソート）。Issue: ファイル順（id 昇順） |
 | データ共有 | タスクは `task-reader.mjs` を `check-status.mjs` と共用。Issue は `paths.mjs` の `ISSUES_PATH` を `manage-issues.mjs` と共用 |
 

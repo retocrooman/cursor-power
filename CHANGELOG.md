@@ -20,6 +20,67 @@
 - README.md: Web ダッシュボードセクションにタブ切り替えと issue 一覧の説明を追記
 - commands/dashboard.md: issue 一覧タブの説明を追記
 
+## 0.5.3 (2026-04-05)
+
+### Features
+
+- **dashboard:** カードクリックで詳細モーダルを表示。prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・作成日時・更新日時・受け入れテスト状態・blocked 時の質問全文を確認可能
+- **dashboard:** モーダルは×ボタン・Esc キー・オーバーレイクリックで閉じられる
+- **dashboard:** カード内の PR リンクなどクリック時はイベント伝播を停止し、モーダルが誤って開かない
+
+### Documentation
+
+- DESIGN.md: ダッシュボード仕様テーブルにカード詳細モーダルの仕様を追記
+- README.md: Web ダッシュボードセクションにカード詳細モーダルの説明を追記
+- commands/dashboard.md: モーダル機能の説明を追記
+
+## 0.5.2 (2026-04-05)
+
+### Features
+
+- **dashboard:** ポーリング時に `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を自動更新するようにした。`/task-status` を実行しなくてもダッシュボード表示中はタスク状態が追従する
+- **dashboard:** ポーリング間隔を 5秒 → 10秒に変更
+
+### Documentation
+
+- DESIGN.md: ダッシュボード節のシーケンス図・仕様テーブルを更新（10秒ポーリング、sync-status 起動）
+- README.md: Web ダッシュボードの説明を更新（10秒間隔、自動同期）
+- commands/dashboard.md: ポーリング時の自動同期について追記
+
+## 0.5.1 (2026-04-05)
+
+### BREAKING CHANGES
+
+- **close-issue:** `--close-issue` はタスク作成時に `issues.json` から即時削除しなくなった。代わりにタスク JSON に `closeIssueId` として紐づけ、`/task-clean` 実行時（PR マージ/クローズ後）に削除される
+
+### Features
+
+- **install:** `cursor-power install` で既存 `config.json` の不足キーをデフォルト値で補完するシャローマージを実装 (#7)
+  - 既存のユーザー設定値は保持し、パッケージ側で追加された新キーのみ補完
+  - 新規インストール時の挙動は従来と同等
+- **task-clean:** タスク削除時に `closeIssueId` が設定されていれば `issues.json` から該当 issue を自動削除
+- **paths:** `ISSUES_PATH` 定数を `paths.mjs` に追加して共用化
+
+### Refactoring
+
+- **config:** `DEFAULTS` を `scripts/defaults.mjs` に切り出し、`update-config.mjs` と `bin/cursor-power.mjs` で共用
+
+### Bug Fixes
+
+- **review:** 差分の基準を `baseBranch` 先端から `merge-base(baseBranch, HEAD)` に変更し、GitHub PR の Files changed と同じファイル集合・差分を表示するようにした (#14)
+  - `getChangedFiles` / `getDiffStat` で `mergeBase..HEAD` を使用
+  - `--action diff` の左ペインを `mergeBase` 時点のファイル内容に変更
+  - `isNew` 判定を `mergeBase` 時点にファイルが存在するかで判定
+
+### Documentation
+
+- commands/task-add.md: `--close-issue` の説明を「task-clean 時に削除」に更新
+- commands/task-clean.md: issue 削除が走る旨を追記
+- README.md: install 説明にマージ動作の記述を追加、スクリプト一覧に `defaults.mjs` を追加
+- DESIGN.md: タスク JSON スキーマに `closeIssueId` フィールドを追記、シーケンス図を更新
+- DESIGN.md: ディレクトリ構成に `defaults.mjs` を追加
+- DESIGN.md: `/task-review` フロー図の説明に merge-base ベースの差分取得を追記
+
 ## 0.5.0 (2026-04-05)
 
 ### BREAKING CHANGES
