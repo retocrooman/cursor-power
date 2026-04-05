@@ -1,9 +1,17 @@
 #!/usr/bin/env node
 import { randomUUID } from "node:crypto";
-import { writeFileSync, mkdirSync, readFileSync, readdirSync } from "node:fs";
+import {
+  writeFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  existsSync,
+} from "node:fs";
 import { join } from "node:path";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH, PLANS_DIR } from "./paths.mjs";
+import { TASKS_DIR, CONFIG_PATH, PLANS_DIR, POWER_DIR } from "./paths.mjs";
+
+const ISSUES_PATH = join(POWER_DIR, "issues.json");
 
 const { values } = parseArgs({
   options: {
@@ -14,6 +22,7 @@ const { values } = parseArgs({
     model: { type: "string" },
     type: { type: "string" },
     title: { type: "string" },
+    "close-issue": { type: "string" },
   },
 });
 
@@ -73,5 +82,29 @@ const task = {
 };
 
 writeFileSync(join(TASKS_DIR, `${id}.json`), JSON.stringify(task, null, 2));
+
+if (values["close-issue"]) {
+  const issueId = Number(values["close-issue"]);
+  if (Number.isNaN(issueId)) {
+    console.error(
+      JSON.stringify({ warning: `Invalid issue id: ${values["close-issue"]}` })
+    );
+  } else if (!existsSync(ISSUES_PATH)) {
+    console.error(
+      JSON.stringify({ warning: `issues.json not found, skipping close-issue` })
+    );
+  } else {
+    const issues = JSON.parse(readFileSync(ISSUES_PATH, "utf-8"));
+    const idx = issues.findIndex((i) => i.id === issueId);
+    if (idx === -1) {
+      console.error(
+        JSON.stringify({ warning: `Issue #${issueId} not found` })
+      );
+    } else {
+      issues.splice(idx, 1);
+      writeFileSync(ISSUES_PATH, JSON.stringify(issues, null, 2));
+    }
+  }
+}
 
 console.log(JSON.stringify({ ...task, canStart }));

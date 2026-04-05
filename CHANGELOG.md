@@ -16,6 +16,7 @@
 
 ### Features
 
+- **task-add:** `--close-issue=<id>` オプションを追加。タスク作成と同時に対応する issue を `issues.json` から削除できる (#12)
 - **task-promote:** issue を対話で仕様を詰めてタスクに昇格する `/task-promote` コマンドを追加
 
 ### Bug Fixes

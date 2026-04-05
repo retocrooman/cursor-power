@@ -277,6 +277,7 @@ sequenceDiagram
   U->>P: /task-add ログイン画面の実装
   P->>S: node add-task.mjs --prompt "..." --repo /path --base main
   S->>S: タスク JSON 生成（status: pending）
+  S->>S: --close-issue があれば issues.json から該当 issue を削除
   S-->>P: タスク ID 返却
   P->>W: node start-worker.mjs --task-id a1b2c3d4
   W->>W: タスク JSON 更新（status: running）
