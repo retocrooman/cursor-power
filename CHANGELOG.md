@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.6.3 (2026-04-05)
+
+### Features
+
+- **dashboard:** `acceptance_running` 用のシアン系バッジ色を追加し、ステータスバッジを短縮ラベル表示に変更（`wait` / `run` / `hold` / `fix` / `pr` / `acc` / `fail` / `done`）
+
 ## 0.6.2 (2026-04-05)
 
 ### Refactoring

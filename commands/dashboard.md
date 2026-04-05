@@ -9,6 +9,7 @@ node ~/.cursor-power/scripts/dashboard.mjs
 - ポーリングのたびに `sync-status.mjs` がバックグラウンドで起動され、PID・ログ・PR 状態が自動更新される。`/task-status` を別途実行しなくてもタスク状態が追従する。
 - タスクデータは `/task-status`（`check-status.mjs`）と同じデータソースを使用する。
 - Issue データは `~/.cursor-power/issues.json`（`manage-issues.mjs` と同じ）を使用する。
+- **ステータスバッジ**: 短縮ラベル表示（`wait` / `run` / `hold` / `fix` / `pr` / `acc` / `fail` / `done`）。`acceptance_running` にはシアン系の専用バッジ色。
 - タスクカードをクリックすると詳細モーダルが開き、prompt 全文・PR URL・sessionId・branch・日時などのメタ情報を確認できる。モーダルは×ボタン・Esc・オーバーレイクリックで閉じる。
 - ポートを変更したい場合は `--port <番号>` を付ける。
 - `~/.cursor-power/config.json` の `dashboardPort` でデフォルトポートを設定できる。

@@ -53,7 +53,7 @@ const HTML = /* html */ `<!DOCTYPE html>
     --bg: #0d1117; --surface: #161b22; --border: #30363d;
     --text: #e6edf3; --muted: #8b949e; --accent: #58a6ff;
     --green: #3fb950; --yellow: #d29922; --red: #f85149;
-    --orange: #db6d28; --purple: #bc8cff;
+    --orange: #db6d28; --purple: #bc8cff; --cyan: #39d2c0;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
@@ -87,6 +87,7 @@ const HTML = /* html */ `<!DOCTYPE html>
   .badge-blocked   { background: var(--yellow); color: var(--bg); }
   .badge-fixing    { background: var(--orange); color: var(--bg); }
   .badge-pr_created { background: var(--purple); color: var(--bg); }
+  .badge-acceptance_running { background: var(--cyan); color: var(--bg); }
   .badge-failed    { background: var(--red); color: #fff; }
   .badge-done      { background: var(--border); color: var(--text); }
   .prompt { color: var(--text); font-size: .875rem; line-height: 1.45; }
@@ -188,8 +189,17 @@ const HTML = /* html */ `<!DOCTYPE html>
 var POLL_INTERVAL = 10000;
 var _taskData = [];
 
+var STATUS_LABELS = {
+  pending: 'wait', running: 'run', blocked: 'hold', fixing: 'fix',
+  pr_created: 'pr', acceptance_running: 'acc', failed: 'fail', done: 'done'
+};
+
+function statusLabel(status) {
+  return STATUS_LABELS[status] || status.replace(/_/g, ' ');
+}
+
 function badge(status) {
-  return '<span class="badge badge-' + status + '">' + status.replace('_', ' ') + '</span>';
+  return '<span class="badge badge-' + status + '">' + escapeHtml(statusLabel(status)) + '</span>';
 }
 
 function relativeTime(iso) {

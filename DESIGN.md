@@ -524,6 +524,7 @@ sequenceDiagram
 | リアルタイム | ブラウザ側ポーリング（10秒間隔、`/api/status` と `/api/issues` を並行取得）。`/api/status` のたびに `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を更新 |
 | タブ切り替え | ヘッダー下にタブ（「タスク」/「Issues」）。アクティブタブに応じて stats + カード一覧を切り替え |
 | レイアウト | 1タスク＝1カード / 1 issue＝1カード。ダークテーマ |
+| バッジ表示 | ステータスバッジは短縮ラベルで表示（例: `pending`→`wait`, `acceptance_running`→`acc`）。CSSクラスは内部 status 名のまま |
 | タスクカード | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
 | Issue カード | id（`#N`）, 本文プレビュー（先頭3行）, createdAt（相対時間） |
 | カード詳細モーダル | タスクカードをクリックで prompt 全文・PR URL（リンク）・sessionId・branch・repoPath・createdAt・updatedAt・受け入れテスト状態・質問全文を表示。×ボタン・Esc・オーバーレイクリックで閉じる。カード内リンクはイベント伝播を停止しモーダルを開かない |
