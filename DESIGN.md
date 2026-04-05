@@ -209,7 +209,7 @@ stateDiagram-v2
 | `planId` | string \| null | `/task-plan` で保存した仕様の ID |
 | `sessionId` | string \| null | agent CLI のセッション ID（`--resume` で使用） |
 | `repoPath` | string | 対象リポジトリの絶対パス |
-| `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>/<title>-<id>` など。`agent --worktree` には `agentWorktreeLabel(branch)`（`/` を `-` にしたもの）だけを渡す） |
+| `branch` | string | 作業ブランチ名（`task-<id>` または `--type` / `--title` 指定時は `<type>-<title>-<id>`）。Git ブランチ名と `agent --worktree` ラベルが同一になるようスラッシュなしで統一 |
 | `baseBranch` | string | 分岐元ブランチ |
 | `model` | string \| null | 使用モデル（null なら config のデフォルト） |
 | `acceptance` | boolean | `true` の場合、PR 前に受け入れテストを実行する |
@@ -570,7 +570,7 @@ sequenceDiagram
 
 ### 受け入れ JSON (`~/.cursor-power/acceptance/<task-id>.json`)
 
-親（ユーザー）が手動で作成する。受け入れ子がチェック結果を書き戻す。
+親（ユーザー）が手動で作成する。受け入れ子がチェック結果を書き戻す。受け入れ子への指示は `buildAcceptancePrompt()` で生成される。`sync-status.mjs` はこのファイルのトップレベル `result` が `"passed"` のときだけ合格として実装子を再開するため、受け入れ子は **必ずこのパスへ JSON を保存**し、保存後に読み直して確認する（`prompt.mjs` に明記）。
 
 ```json
 {
