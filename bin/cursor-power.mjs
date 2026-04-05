@@ -75,6 +75,9 @@ function install() {
 
   console.log(`\ncursor-power v${pkg.version} インストール完了。`);
   console.log("Agent tab で /task-add, /task-plan, /task-promote, /task-list, /task-status, /task-check,");
-  console.log("/task-review, /task-clean, /task-config, /issue-add, /issue-list, /tutorial が使えます。");
-  console.log(`\n受け入れテスト機能を使う場合は ~/.cursor-power/acceptance/<taskId>.json にチェックリストを配置してください。`);
+  console.log("/task-review, /task-clean, /task-config, /issue-add, /issue-list, /dashboard, /tutorial が使えます。");
+  console.log("\nWeb ダッシュボード: node ~/.cursor-power/scripts/dashboard.mjs (http://127.0.0.1:3820)");
+  console.log(
+    "\n受け入れテスト機能を使う場合は ~/.cursor-power/acceptance/<taskId>.json にチェックリストを配置してください。"
+  );
 }

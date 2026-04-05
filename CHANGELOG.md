@@ -20,13 +20,20 @@
 - **status:** 新ステータス `fixing`（受け入れ不合格→修正中）と `acceptance_running`（受け入れテスト実行中）を追加
 - **config:** `acceptanceByDefault`（boolean、既定 `false`）を設定に追加。`true` で全タスクにデフォルト受け入れテストを有効化
 - **prompt:** リスクスコア定義に 1〜5 の各段階を明示する詳細な判断基準表を追加
+- **dashboard:** ローカル Web ダッシュボードを追加。Node 組み込み `http` モジュールのみで `127.0.0.1` にバインドし、タスク状態をブラウザでリアルタイム監視できる (#9)
+- **dashboard:** `config.json` の `dashboardPort`（既定 `3820`）+ `--port` CLI オプションでポート設定可能
+- **dashboard:** ダークテーマのカードレイアウト。各カードに id・status・PR URL（なければ「なし」）・プロンプト先頭1〜2行・sessionId の有無・updatedAt を表示
+- **dashboard:** タスク一覧を `updatedAt` 降順でソート（API 側）。ポーリング間隔 5秒
+- **task-reader:** `check-status.mjs` のタスク読み取りロジックを `task-reader.mjs` に共通化し、ダッシュボードと CLI で同じデータソースを使用
 
 ### Documentation
 
 - **task-review:** リスク表示を「安全度: 影響の小ささ N/5, 発生しにくさ N/5」に更新
 - DESIGN.md: タスク JSON スキーマに `riskScore` フィールドを追加、リスクスコアの定義表を追記
 - DESIGN.md: 状態遷移図に `fixing` / `acceptance_running` を追加、受け入れフローのシーケンス図・acceptance JSON スキーマを追記
+- DESIGN.md: `/dashboard` フロー図・仕様テーブルを追加、UI 仕様（カード構成・ソート・ポーリング間隔）を明記
 - README.md: 受け入れテストの使い方セクション、設定テーブルに `acceptanceByDefault` を追記
+- README.md: Web ダッシュボードセクション・コマンド表・設定テーブル・ディレクトリ構成を更新
 - commands/task-add.md, task-plan.md, task-promote.md: `--acceptance` オプションの説明を追記
 
 ## 0.4.0 (2026-04-05)

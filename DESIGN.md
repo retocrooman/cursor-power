@@ -21,7 +21,7 @@
 | 層 | 役割 | 理由 |
 |----|------|------|
 | `~/.cursor/commands/*.md` | コマンド認識・エージェントへの指示 | Cursor の公式機能。プロンプトとして注入される |
-| `~/.cursor-power/scripts/*.mjs` | 状態管理・プロセス起動など確実性が必要な処理 | エージェント任せだと JSON 形式のブレや git 操作ミスが起きうる |
+| `~/.cursor-power/scripts/*.mjs` | 状態管理・プロセス起動・ダッシュボードなど確実性が必要な処理 | エージェント任せだと JSON 形式のブレや git 操作ミスが起きうる |
 
 エージェントの柔軟性（対話、判断）とスクリプトの確実性（ファイル I/O、プロセス管理）を分離する。
 
@@ -105,6 +105,7 @@ flowchart TB
   issue-add.md                   # issue 登録
   issue-list.md                  # issue 一覧
   task-promote.md                # issue をタスクに昇格
+  dashboard.md                   # Web ダッシュボード起動手順
   tutorial.md                    # 対話型ウォークスルー
 
 ~/.cursor-power/                 # グローバル状態管理
@@ -126,8 +127,10 @@ flowchart TB
     add-task.mjs                 # タスク登録
     start-worker.mjs             # 子エージェント起動
     list-tasks.mjs               # タスク一覧
+    task-reader.mjs              # タスク読み取り共通モジュール（check-status / dashboard で共用）
     check-status.mjs             # ステータス確認（同期表示 + 非同期更新起動）
     sync-status.mjs              # バックグラウンドでタスク状態を同期 → drain-pending を起動
+    dashboard.mjs                # ローカル Web ダッシュボード（127.0.0.1 のみ）
     drain-pending.mjs            # 空き枠で pending タスクを自動起動（FIFO）
     check-questions.mjs          # 質問確認・回答書き込み
     send-answer.mjs              # 子エージェントに回答を中継（resume）
@@ -265,6 +268,7 @@ stateDiagram-v2
   "maxConcurrency": 3,
   "draftPR": false,
   "autoStartPending": true,
+  "dashboardPort": 3820,
   "acceptanceByDefault": false
 }
 ```
@@ -275,6 +279,7 @@ stateDiagram-v2
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 | `autoStartPending` | boolean | `true` | 並列枠に空きが出たとき `pending` タスクを自動起動する |
+| `dashboardPort` | number | `3820` | Web ダッシュボードのデフォルトポート |
 | `acceptanceByDefault` | boolean | `false` | `true` にすると全タスクで受け入れテストをデフォルト有効にする |
 
 ## コマンド別処理フロー
@@ -477,6 +482,38 @@ sequenceDiagram
   S-->>P: issue 一覧 JSON
   P->>U: 番号付きリストで表示
 ```
+
+### `/dashboard`
+
+ローカル Web ダッシュボードでタスク状態をリアルタイム監視する。`check-status.mjs` と同じデータソース（`task-reader.mjs`）を使うため表示が矛盾しない。
+
+```mermaid
+sequenceDiagram
+  participant U as ユーザー
+  participant P as 親 Agent tab
+  participant D as dashboard.mjs
+  participant B as ブラウザ
+
+  U->>P: /dashboard
+  P->>D: node dashboard.mjs [--port 3820]
+  D->>D: http サーバー起動（127.0.0.1 のみ）
+  D-->>P: http://127.0.0.1:3820
+  P->>U: ダッシュボード URL を案内
+  B->>D: GET /（HTML）
+  B->>D: GET /api/status（ポーリング、5秒間隔）
+  D->>D: task-reader.mjs でタスク JSON 読み取り
+  D-->>B: タスク一覧 JSON
+```
+
+| 項目 | 仕様 |
+|------|------|
+| バインド | `127.0.0.1` のみ（ローカル専用） |
+| ポート | `config.json` の `dashboardPort`（既定 `3820`）。`--port` で上書き可 |
+| リアルタイム | ブラウザ側ポーリング（5秒間隔、`fetch('/api/status')`） |
+| レイアウト | 1タスク＝1カード。ダークテーマ |
+| カード表示 | id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt |
+| 並び順 | `updatedAt` 降順（API 側でソート） |
+| データ共有 | `task-reader.mjs` を `check-status.mjs` と共用 |
 
 ### 受け入れテストフロー（`--acceptance` 付きタスクのみ）
 

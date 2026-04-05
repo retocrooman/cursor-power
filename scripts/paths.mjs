@@ -8,6 +8,7 @@ export const TASKS_DIR = join(POWER_DIR, "tasks");
 export const QUESTIONS_DIR = join(POWER_DIR, "questions");
 export const LOGS_DIR = join(POWER_DIR, "logs");
 export const PLANS_DIR = join(POWER_DIR, "plans");
+export const SCRIPTS_DIR = join(POWER_DIR, "scripts");
 export const ACCEPTANCE_DIR = join(POWER_DIR, "acceptance");
 export const CONFIG_PATH = join(POWER_DIR, "config.json");
 

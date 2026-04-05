@@ -54,6 +54,7 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
 | `/issue-list` | 登録済み issue の一覧を表示 |
 | `/task-promote` | issue を対話で仕様を詰めてタスクに昇格 |
+| `/dashboard` | タスク状態を監視する Web ダッシュボードの起動手順を案内 |
 | `/tutorial` | cursor-power の使い方をステップバイステップで体験するウォークスルー |
 
 ## 基本的な使い方
@@ -185,6 +186,7 @@ Agent: マージ済み worktree を削除:
   "maxConcurrency": 3,
   "draftPR": false,
   "autoStartPending": true,
+  "dashboardPort": 3820,
   "acceptanceByDefault": false
 }
 ```
@@ -195,6 +197,7 @@ Agent: マージ済み worktree を削除:
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
 | `autoStartPending` | boolean | `true` | `true` のとき、並列枠に空きが出たら `pending` タスクを FIFO で自動起動する |
+| `dashboardPort` | number | `3820` | Web ダッシュボードのデフォルトポート |
 | `acceptanceByDefault` | boolean | `false` | `true` にすると全タスクで受け入れテストをデフォルト有効にする |
 
 ## ディレクトリ構成
@@ -212,6 +215,7 @@ Agent: マージ済み worktree を削除:
   issue-add.md
   issue-list.md
   task-promote.md
+  dashboard.md
   tutorial.md
 
 ~/.cursor-power/             # 状態管理・スクリプト
@@ -233,8 +237,10 @@ Agent: マージ済み worktree を削除:
     add-task.mjs             # タスク登録
     start-worker.mjs         # 子エージェント起動
     list-tasks.mjs           # タスク一覧
+    task-reader.mjs          # タスク読み取り共通モジュール
     check-status.mjs         # ステータス確認（同期表示 + 非同期更新起動）
     sync-status.mjs          # バックグラウンドでタスク状態を同期（PID・ログ・PR 状態・sessionId 補完）→ drain-pending を起動
+    dashboard.mjs            # ローカル Web ダッシュボード（127.0.0.1 のみ）
     drain-pending.mjs        # 空き枠で pending タスクを自動起動（FIFO）
     check-questions.mjs      # 質問確認・回答書き込み
     send-answer.mjs          # 子エージェントに回答を中継（resume）
@@ -245,6 +251,23 @@ Agent: マージ済み worktree を削除:
     update-config.mjs        # 設定変更
     manage-issues.mjs        # issue 管理
 ```
+
+## Web ダッシュボード
+
+ブラウザでタスク状態をリアルタイム監視できるローカル Web ダッシュボードを内蔵しています。
+
+```bash
+node ~/.cursor-power/scripts/dashboard.mjs
+```
+
+`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（5秒間隔）表示されます。
+
+- **レイアウト**: ダークテーマ、1タスク＝1カード
+- **カード表示**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt
+- **並び順**: `updatedAt` 降順（新しい更新が上）
+- ポート変更: `--port 8080`
+- デフォルトポートは `config.json` の `dashboardPort` で設定可能
+- バインドは `127.0.0.1` のみ（ローカル専用）
 
 ## 関連ドキュメント
 
