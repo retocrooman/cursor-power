@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, writeFileSync, unlinkSync, existsSync } from
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { homedir } from "node:os";
-import { TASKS_DIR, QUESTIONS_DIR, LOGS_DIR, agentWorktreeLabel } from "./paths.mjs";
+import { TASKS_DIR, QUESTIONS_DIR, LOGS_DIR, ISSUES_PATH, agentWorktreeLabel } from "./paths.mjs";
 
 let tasks = [];
 try {
@@ -78,6 +78,18 @@ for (const task of tasks) {
   if (existsSync(logPath)) {
     unlinkSync(logPath);
     result.actions.push("log file deleted");
+  }
+
+  if (task.closeIssueId != null) {
+    try {
+      const issues = JSON.parse(readFileSync(ISSUES_PATH, "utf-8"));
+      const idx = issues.findIndex((i) => i.id === task.closeIssueId);
+      if (idx !== -1) {
+        issues.splice(idx, 1);
+        writeFileSync(ISSUES_PATH, JSON.stringify(issues, null, 2));
+        result.actions.push(`issue #${task.closeIssueId} removed`);
+      }
+    } catch {}
   }
 
   const taskPath = join(TASKS_DIR, `${task.id}.json`);

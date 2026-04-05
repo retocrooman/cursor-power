@@ -35,7 +35,7 @@ cursor-power install
 
 1. `~/.cursor/commands/` にコマンドファイル（`.md`）を配置
 2. `~/.cursor-power/` に状態管理ディレクトリとスクリプトを作成
-3. `~/.cursor-power/config.json` にデフォルト設定を生成
+3. `~/.cursor-power/config.json` を生成または更新（既存の場合は不足キーのみ追加。ユーザーが設定した値は上書きしない）
 
 ## コマンド一覧
 
@@ -232,6 +232,7 @@ Agent: マージ済み worktree を削除:
   acceptance/                # 受け入れテストチェックリスト
     <task-id>.json
   scripts/                   # ヘルパースクリプト
+    defaults.mjs             # 設定キーの既定値（install / update-config で共用）
     paths.mjs                # 共通パス定義
     prompt.mjs               # 子エージェントへのプロンプト生成
     add-task.mjs             # タスク登録
@@ -260,7 +261,7 @@ Agent: マージ済み worktree を削除:
 node ~/.cursor-power/scripts/dashboard.mjs
 ```
 
-`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（5秒間隔）表示されます。
+`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（10秒間隔）表示されます。ポーリングのたびに `sync-status.mjs` がバックグラウンドで起動され、PID・ログ・PR 状態が自動的に更新されるため、`/task-status` を別途実行しなくてもタスク状態が追従します。
 
 - **レイアウト**: ダークテーマ、1タスク＝1カード
 - **カード表示**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt
