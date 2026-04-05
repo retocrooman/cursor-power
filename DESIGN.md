@@ -214,6 +214,7 @@ stateDiagram-v2
 | `prUrl` | string \| null | 作成された PR の URL |
 | `worktreePath` | string \| null | worktree のパス |
 | `pid` | number \| null | 子エージェントプロセスの PID |
+| `riskScore` | object \| null | 安全度スコア（`{ impact, likelihood }`）。数値が大きいほど安全（5=問題なし・リスク低、1=リスク高）。詳細は後述 |
 | `logPath` | string \| null | ログファイルのパス |
 | `createdAt` | string | 作成日時（ISO 8601） |
 | `updatedAt` | string | 最終更新日時（ISO 8601） |
@@ -291,6 +292,7 @@ sequenceDiagram
   U->>P: /task-add ログイン画面の実装
   P->>S: node add-task.mjs --prompt "..." --repo /path --base main
   S->>S: タスク JSON 生成（status: pending）
+  S->>S: --close-issue があれば issues.json から該当 issue を削除
   S-->>P: タスク ID 返却
   P->>W: node start-worker.mjs --task-id a1b2c3d4
   W->>W: タスク JSON 更新（status: running）
@@ -588,6 +590,17 @@ sequenceDiagram
 回答中継時は `buildResumePrompt()` で簡潔なプロンプトを生成し、`agent --resume <session_id>` で子セッションに送信する。
 
 子エージェントにはレポのコンテキストやアーキテクチャ情報は渡さない。`--workspace` で対象レポを指定するため、子エージェント自身がコードベースを探索して理解する。
+
+### リスクスコア（安全度スケール）
+
+子エージェントは PR 作成前に変更の安全度を `riskScore` として評価する。**数値が大きいほど安全**。
+
+| フィールド | 意味 | 1（リスク高） | 5（安全） |
+|-----------|------|-------------|----------|
+| `impact` | 影響の小ささ | 影響範囲が広く障害が重い可能性 | 局所的・影響は軽微で問題になりにくい |
+| `likelihood` | 発生しにくさ | 欠陥が入りやすく不確実 | バグが入る余地がほぼない |
+
+安全な変更では `impact=5, likelihood=5` を付ける。`/task-review` では「安全度: 影響の小ささ N/5, 発生しにくさ N/5」の形式で表示する。
 
 ## 並列実行の制御
 

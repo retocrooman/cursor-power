@@ -10,7 +10,7 @@ node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 
 出力にはタスクの prompt フィールドが含まれる。まず prompt の内容から「背景」「目的」「ベースブランチ」を読み取り、一文で要約して表示する（例: 「レビュー時にタスクの目的を表示するため、review-pr.mjs と task-review.md を更新（ベース: main）」）。
 
-出力に riskScore が含まれる場合は、概要の直後にリスクスコアを表示する。形式: 「リスク: 影響度 N/5, 発生率 N/5」。riskScore が null の場合は「リスク: 未評価」と表示する。
+出力に riskScore が含まれる場合は、概要の直後に安全度スコアを表示する。形式: 「安全度: 影響の小ささ N/5, 発生しにくさ N/5」（数値が大きいほど安全）。riskScore が null の場合は「安全度: 未評価」と表示する。
 
 次に changedFiles を番号付きリストで表示する。各ファイルには diffStat（additions, deletions, isNew）が付与されているので、それを元にファイルごとの変更内容を一言で説明する。
 
@@ -24,7 +24,7 @@ node ~/.cursor-power/scripts/review-pr.mjs --task-id <タスクID>
 タスク 765e84e0 のレビュー (PR: URL)
 
 概要: エントリポイントにルーティングを追加し、ヘルパー関数を新設（ベース: main）
-リスク: 影響度 3/5, 発生率 2/5
+安全度: 影響の小ささ 3/5, 発生しにくさ 4/5
 
 変更ファイル:
   1. src/index.ts (+12 / -3) — エントリポイントにルーティング追加
