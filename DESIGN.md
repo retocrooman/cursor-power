@@ -104,6 +104,7 @@ flowchart TB
   task-config.md                 # 設定変更
   issue-add.md                   # issue 登録
   issue-list.md                  # issue 一覧
+  task-promote.md                # issue をタスクに昇格
   tutorial.md                    # 対話型ウォークスルー
 
 ~/.cursor-power/                 # グローバル状態管理
@@ -124,7 +125,8 @@ flowchart TB
     start-worker.mjs             # 子エージェント起動
     list-tasks.mjs               # タスク一覧
     check-status.mjs             # ステータス確認（同期表示 + 非同期更新起動）
-    sync-status.mjs              # バックグラウンドでタスク状態を同期
+    sync-status.mjs              # バックグラウンドでタスク状態を同期 → drain-pending を起動
+    drain-pending.mjs            # 空き枠で pending タスクを自動起動（FIFO）
     check-questions.mjs          # 質問確認・回答書き込み
     send-answer.mjs              # 子エージェントに回答を中継（resume）
     clean-worktrees.mjs          # worktree クリーンアップ
@@ -144,6 +146,7 @@ flowchart TB
 stateDiagram-v2
   [*] --> pending: /task-add
   pending --> running: 子エージェント起動
+  pending --> running: drain-pending（枠空き時に自動起動）
   running --> blocked: 子が質問を書く
   blocked --> running: 親が回答を中継
   running --> pr_created: gh pr create 成功
@@ -247,7 +250,8 @@ stateDiagram-v2
 {
   "defaultModel": "sonnet-4",
   "maxConcurrency": 3,
-  "draftPR": false
+  "draftPR": false,
+  "autoStartPending": true
 }
 ```
 
@@ -256,6 +260,7 @@ stateDiagram-v2
 | `defaultModel` | string | `"sonnet-4"` | 子エージェントのデフォルトモデル |
 | `maxConcurrency` | number | `3` | 同時実行する子エージェントの最大数 |
 | `draftPR` | boolean | `false` | `true` にすると PR をドラフト状態で作成する |
+| `autoStartPending` | boolean | `true` | 並列枠に空きが出たとき `pending` タスクを自動起動する |
 
 ## コマンド別処理フロー
 
@@ -319,6 +324,7 @@ sequenceDiagram
   BG->>BG: PID 存在チェック・ログ解析
   BG->>G: gh pr view で PR 状態確認
   BG->>BG: タスク JSON を更新
+  BG->>BG: drain-pending.mjs を起動（空き枠があれば pending を自動起動）
 ```
 
 ### `/task-check`
@@ -503,6 +509,18 @@ sequenceDiagram
 - `config.json` の `maxConcurrency` で上限を制御
 - `add-task.mjs` が起動前に `running` + `blocked` ステータスのタスク数を数え、上限に達していれば `pending` のまま待機
 - `start-worker.mjs` はバックグラウンドプロセスとして agent CLI を起動し、即座に制御を返す
+
+### pending の自動起動（drain-pending）
+
+`sync-status.mjs` がタスク状態を更新したあと、`drain-pending.mjs` をバックグラウンドで起動する。`drain-pending.mjs` は以下のロジックで `pending` タスクを自動起動する:
+
+1. `config.autoStartPending` が `false` なら何もしない
+2. `activeCount` = `running` + `blocked` の件数を算出
+3. `freeSlots` = `maxConcurrency` − `activeCount`。0 以下なら終了
+4. `pending` タスクを `createdAt` 昇順（FIFO）でソート
+5. `freeSlots` 分だけ先頭から取り出し、各タスクの JSON を再読込して**まだ `pending`** のときだけ `start-worker.mjs` を `spawn`（detached）で実行
+
+これにより、タスクが `done` / `pr_created` / `failed` に遷移して枠が空くと、次の `/task-status` 実行時に待ち行列の `pending` が自動で `running` に移る。
 
 ## リカバリ
 

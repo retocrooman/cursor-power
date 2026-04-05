@@ -1,10 +1,23 @@
 # Changelog
 
+## 0.4.0 (2026-04-05)
+
+### Features
+
+- **drain-pending:** 並列枠に空きが出たとき `pending` タスクを `createdAt` 順（FIFO）で自動起動する `drain-pending.mjs` を追加 (#13)
+- **config:** `autoStartPending`（boolean、既定 `true`）を設定に追加。`false` で自動起動を無効化
+
+### Documentation
+
+- DESIGN.md: 「pending の自動起動」セクションを追加し、状態遷移図・シーケンス図を更新
+- README.md: 設定テーブルに `autoStartPending` を追記、スクリプト一覧に `drain-pending.mjs` を追加
+
 ## 0.3.3 (2026-04-05)
 
 ### Features
 
 - **task-add:** `--close-issue=<id>` オプションを追加。タスク作成と同時に対応する issue を `issues.json` から削除できる (#12)
+- **task-promote:** issue を対話で仕様を詰めてタスクに昇格する `/task-promote` コマンドを追加
 
 ### Bug Fixes
 
@@ -15,6 +28,8 @@
 
 ### Documentation
 
+- **issue-list:** 一覧から issue をタスク化する際は `/task-promote` または `/task-plan` で対話してから昇格する旨を追記
+- **task-promote:** `/task-promote` の手順・フローを README / DESIGN に追記
 - DESIGN.md: `/task-check` フロー図の `--resume` 呼び出しに worktree 引数を明記
 - DESIGN.md: リカバリセクションに `send-answer.mjs` が worktree コンテキストを維持する旨を追記
 
