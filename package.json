@@ -1,6 +1,6 @@
 {
   "name": "cursor-power",
-  "version": "0.5.1",
+  "version": "0.6.0",
   "description": "Minimal orchestration layer for parallel Cursor Agent workers",
   "type": "module",
   "bin": {

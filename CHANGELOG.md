@@ -4,6 +4,94 @@
 
 ## 2026-04-05
 
+### Features
+
+- **dashboard:** add acceptance_running badge color and short status labels
+- **dashboard:** trigger sync-status on poll and change interval to 10s
+- **dashboard:** add issues tab with tab-switching UI
+- **dashboard:** add card detail modal on click
+- **close-issue:** defer issue removal from add-task to task-clean
+- **install:** merge missing default keys into existing config.json
+- **dashboard:** refine UI per confirmed spec
+- **dashboard:** add local web dashboard for real-time task monitoring
+- **acceptance:** add pre-PR acceptance testing with fixing status
+- **riskScore:** invert scale so higher values mean safer changes (#12)
+- **task-promote:** add /task-promote command to promote issues to tasks
+- **drain-pending:** auto-start pending tasks when concurrency slots free up
+- **task-add:** add --close-issue option to remove issue on task creation
+- **review:** add risk score assessment for PR review
+- **task:** support {type}/{title}-{id} branch name format
+
+### Bug Fixes
+
+- **dashboard:** let clicks pass through closed modal overlay
+- **prompt:** require acceptance JSON to be written and re-read
+- **paths:** remove duplicate ISSUES_PATH export
+- **review:** use merge-base for diff baseline instead of baseBranch tip
+- **resume:** align worktree args and add field validation for --resume flow
+- **sync-status:** backfill sessionId from log regardless of task status
+- **worktree:** pass sanitized label to agent while keeping git branch names
+- **branch:** use hyphen-separated names for agent --worktree
+- **worker:** use task.baseBranch for git pull instead of hardcoded main
+- **clean:** delete task JSON for merged and done tasks (#25)
+- **worker:** fetch and pull main before spawning agent (#24)
+- **task:** enforce maxConcurrency check before starting worker (#23)
+- **clean:** delete task JSON for merged and done tasks
+
+### Refactoring
+
+- **branch:** unify task JSON branch to slash-free format
+
+### Documentation
+
+- **changelog:** use date-only section headings and version release script
+- sync markdown files with current implementation (v0.4–v0.6)
+- **design:** clarify acceptance JSON must be written for sync-status
+- sync all markdown files with current v0.3.0 implementation
+- **readme:** remove duplicate contribution section after merge
+- add contribution section to README
+
+### Other
+
+- Merge pull request #29 from retocrooman/add-contribution-section
+- Merge pull request #49 from retocrooman/task-f63cf7fa
+- Merge pull request #48 from retocrooman/task-8d744729
+- merge main into task-8d744729 (resolve CHANGELOG)
+- Merge pull request #46 from retocrooman/refactor-branch-name-no-slash-26c09f0c
+- merge main into refactor-branch-name (resolve CHANGELOG)
+- Merge pull request #44 from retocrooman/feat-dashboard-issues-tab-a6f4b3f0
+- merge main into feat-dashboard-issues-tab (resolve conflicts)
+- Merge pull request #43 from retocrooman/feat-dashboard-card-detail-modal-ebec00f4
+- merge main into feat-dashboard-card-detail-modal (resolve conflicts)
+- Merge pull request #45 from retocrooman/feat-dashboard-poll-sync-status-5d23b6b0
+- Merge pull request #42 from retocrooman/feat-defer-close-issue-to-task-clean-542f0aff
+- Merge origin/main into feat-defer-close-issue-to-task-clean-542f0aff
+- Merge pull request #41 from retocrooman/feat-config-merge-on-install-fd42b126
+- Merge origin/main into feat-config-merge-on-install-fd42b126
+- Merge pull request #40 from retocrooman/fix-review-pr-merge-base-diff-af813e8d
+- Merge pull request #39 from retocrooman/feat-task-dashboard-local-147734a4
+- Merge origin/main into feat-task-dashboard-local-147734a4
+- Merge pull request #38 from retocrooman/feat-acceptance-uat-before-pr-bbbd95e7
+- **merge:** resolve main into acceptance PR (#38)
+- Merge pull request #37 from retocrooman/feat-risk-score-safety-scale-506dc486
+- Merge pull request #34 from retocrooman/feat-close-issue-on-task-add-9a4e86b6
+- Merge remote-tracking branch 'origin/main' into feat-close-issue-on-task-add-9a4e86b6
+- Merge pull request #36 from retocrooman/feat-task-promote-and-issue-list-docs-b0911f79
+- Merge pull request #35 from retocrooman/cursor-power/feat-auto-start-pending-drain-d37466b1
+- Merge remote-tracking branch 'origin/main' into feat-close-issue-on-task-add-9a4e86b6
+- Merge pull request #33 from retocrooman/fix-resume-worktree-context-05f089f3
+- merge main: resolve CHANGELOG for #32 and #33
+- Merge pull request #32 from retocrooman/fix-sessionid-when-blocked-65a5b33d
+- Merge pull request #26 from retocrooman/task-cfe3349e
+- merge: resolve conflicts with main (canStart + branch format)
+- Merge pull request #30 from retocrooman/task-4b74bc16
+- Merge pull request #27 from retocrooman/task-72baf500
+- Merge pull request #28 from retocrooman/task-4341ccee
+- Merge remote-tracking branch 'origin/main' into add-contribution-section
+- Merge pull request #25 from retocrooman/task-6376d376
+
+## 2026-04-05
+
 ### Bug Fixes
 
 - **dashboard:** 閉じた状態の詳細モーダル用オーバーレイが全面でクリックを奪い、カードから詳細を開けなかった問題を修正（`pointer-events`）
