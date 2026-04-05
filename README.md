@@ -52,6 +52,7 @@ Cursor の Agent tab で `/` に続けて入力する。
 | `/task-config` | 設定を対話的に変更（モデル、同時実行数など） |
 | `/issue-add <メモ>` | アイデアや改善点を issue として記録 |
 | `/issue-list` | 登録済み issue の一覧を表示 |
+| `/task-promote` | issue を対話で仕様を詰めてタスクに昇格 |
 | `/tutorial` | cursor-power の使い方をステップバイステップで体験するウォークスルー |
 
 ## 基本的な使い方
@@ -181,6 +182,7 @@ Agent: マージ済み worktree を削除:
   task-config.md
   issue-add.md
   issue-list.md
+  task-promote.md
   tutorial.md
 
 ~/.cursor-power/             # 状態管理・スクリプト
