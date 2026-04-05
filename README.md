@@ -261,7 +261,7 @@ Agent: マージ済み worktree を削除:
 node ~/.cursor-power/scripts/dashboard.mjs
 ```
 
-`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（5秒間隔）表示されます。
+`http://127.0.0.1:3820` にアクセスすると、`/task-status` と同じデータがブラウザ上に自動更新（10秒間隔）表示されます。ポーリングのたびに `sync-status.mjs` がバックグラウンドで起動され、PID・ログ・PR 状態が自動的に更新されるため、`/task-status` を別途実行しなくてもタスク状態が追従します。
 
 - **レイアウト**: ダークテーマ、1タスク＝1カード
 - **カード表示**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt

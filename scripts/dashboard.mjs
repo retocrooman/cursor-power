@@ -8,9 +8,14 @@
  */
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import { CONFIG_PATH } from "./paths.mjs";
 import { getTaskStatuses } from "./task-reader.mjs";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function readConfig() {
   try {
@@ -115,7 +120,7 @@ const HTML = /* html */ `<!DOCTYPE html>
 <div class="card-list" id="tasks"></div>
 
 <script>
-var POLL_INTERVAL = 5000;
+var POLL_INTERVAL = 10000;
 
 function badge(status) {
   return '<span class="badge badge-' + status + '">' + status.replace('_', ' ') + '</span>';
@@ -219,6 +224,12 @@ setInterval(poll, POLL_INTERVAL);
 
 const server = createServer((req, res) => {
   if (req.method === "GET" && req.url === "/api/status") {
+    const child = spawn(process.execPath, [join(__dirname, "sync-status.mjs")], {
+      detached: true,
+      stdio: "ignore",
+    });
+    child.unref();
+
     const data = getTaskStatuses({ includeDone: false });
     res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
     res.end(JSON.stringify(data));
