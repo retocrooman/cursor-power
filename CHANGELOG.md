@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.5.1 (2026-04-05)
+
+### Bug Fixes
+
+- **review:** 差分の基準を `baseBranch` 先端から `merge-base(baseBranch, HEAD)` に変更し、GitHub PR の Files changed と同じファイル集合・差分を表示するようにした (#14)
+  - `getChangedFiles` / `getDiffStat` で `mergeBase..HEAD` を使用
+  - `--action diff` の左ペインを `mergeBase` 時点のファイル内容に変更
+  - `isNew` 判定を `mergeBase` 時点にファイルが存在するかで判定
+
+### Documentation
+
+- DESIGN.md: `/task-review` フロー図の説明に merge-base ベースの差分取得を追記
+- CHANGELOG.md: v0.5.1 エントリを追加
+
 ## 0.5.0 (2026-04-05)
 
 ### BREAKING CHANGES
