@@ -264,6 +264,7 @@ node ~/.cursor-power/scripts/dashboard.mjs
 `http://127.0.0.1:3820` にアクセスすると、タブ切り替えでタスク一覧と issue 一覧を閲覧できます（10秒間隔で自動更新）。ポーリングのたびに `sync-status.mjs` がバックグラウンドで起動され、PID・ログ・PR 状態が自動的に更新されるため、`/task-status` を別途実行しなくてもタスク状態が追従します。
 
 - **タブ**: 「タスク」と「Issues」の2タブ。件数バッジ付き
+- **バッジ表示**: ステータスバッジは短縮ラベルで表示（例: `pending`→`wait`, `acceptance_running`→`acc`）
 - **タスクカード**: id, status, PR URL（なければ「なし」）, プロンプト先頭1〜2行, sessionId の有無, updatedAt
 - **Issue カード**: id（`#N`）, 本文プレビュー（先頭3行）, 作成日時（相対時間）
 - **カード詳細モーダル**: タスクカードをクリックすると prompt 全文・メタ情報（PR URL, sessionId, branch, repo, 日時など）を表示。×ボタン・Esc・オーバーレイクリックで閉じる
