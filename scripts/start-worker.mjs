@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync, openSync } from "node:fs";
 import { join } from "node:path";
 import { spawn, execSync } from "node:child_process";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, CONFIG_PATH, LOGS_DIR } from "./paths.mjs";
+import { TASKS_DIR, CONFIG_PATH, LOGS_DIR, agentWorktreeLabel } from "./paths.mjs";
 import { buildInitialPrompt } from "./prompt.mjs";
 
 const { values } = parseArgs({
@@ -37,7 +37,7 @@ const args = [
   "--print",
   "--yolo",
   "--worktree",
-  task.branch,
+  agentWorktreeLabel(task.branch),
   "--worktree-base",
   task.baseBranch,
   "--output-format",

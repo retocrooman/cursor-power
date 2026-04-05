@@ -2,7 +2,8 @@
 import { readdirSync, readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
-import { TASKS_DIR, QUESTIONS_DIR, LOGS_DIR } from "./paths.mjs";
+import { homedir } from "node:os";
+import { TASKS_DIR, QUESTIONS_DIR, LOGS_DIR, agentWorktreeLabel } from "./paths.mjs";
 
 let tasks = [];
 try {
@@ -38,9 +39,18 @@ for (const task of tasks) {
     }
   }
 
+  const repoName = task.repoPath.split("/").pop();
+  const defaultWorktreePath = join(
+    homedir(),
+    ".cursor",
+    "worktrees",
+    repoName,
+    agentWorktreeLabel(task.branch)
+  );
+
   try {
     execSync(
-      `git -C "${task.repoPath}" worktree remove "${task.worktreePath || `~/.cursor/worktrees/${task.repoPath.split("/").pop()}/task-${task.id}`}" --force 2>/dev/null`,
+      `git -C "${task.repoPath}" worktree remove "${task.worktreePath || defaultWorktreePath}" --force 2>/dev/null`,
       { encoding: "utf-8" }
     );
     result.actions.push("worktree removed");

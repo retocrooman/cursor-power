@@ -47,14 +47,9 @@ const activeCount = existing.filter(
 const id = randomUUID().slice(0, 8);
 const now = new Date().toISOString();
 
-/** Cursor Agent CLI の `--worktree` 名に `/` は使えないため、区切りはハイフンのみにする */
-function sanitizeBranchSegment(s) {
-  return String(s).replace(/\//g, "-");
-}
-
 let branch;
 if (values.type && values.title) {
-  branch = `${sanitizeBranchSegment(values.type)}-${sanitizeBranchSegment(values.title)}-${id}`;
+  branch = `${values.type}/${values.title}-${id}`;
 } else {
   branch = `task-${id}`;
 }

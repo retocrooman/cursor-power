@@ -5,7 +5,7 @@
 1. ユーザーの指示内容からブランチの `--type` と `--title` を自動判定する:
    - **type**: 指示内容から適切なConventional Commits typeを判定する（feat, fix, refactor, docs, chore, test, ci, perf, style 等）
    - **title**: 指示内容の要約をケバブケースで生成する（例: fix-concurrency-check, add-dark-mode）
-   - 生成される **ブランチ名** は `<type>-<title>-<id>`（ハイフンのみ）。`agent --worktree` の制約で `/` は使わない
+   - 生成される **Git ブランチ名** は `<type>/<title>-<id>`。`agent --worktree` 用のローカル名だけ `/` を `-` に置換する（`start-worker.mjs` の `agentWorktreeLabel`）
 
 2. ユーザーの指示内容を `--prompt` に渡す。プランIDがある場合は `--plan` を使う。現在のワークスペースのパスを `--repo` に、ベースブランチを `--base` に指定する。`--type` と `--title` を必ず付与する。
 

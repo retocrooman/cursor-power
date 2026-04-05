@@ -3,7 +3,7 @@ import { readFileSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { execSync } from "node:child_process";
 import { parseArgs } from "node:util";
-import { TASKS_DIR } from "./paths.mjs";
+import { TASKS_DIR, agentWorktreeLabel } from "./paths.mjs";
 import { tmpdir } from "node:os";
 
 const { values } = parseArgs({
@@ -28,7 +28,13 @@ const task = JSON.parse(readFileSync(taskPath, "utf-8"));
 const repoName = task.repoPath.split("/").pop();
 const worktreePath =
   task.worktreePath ||
-  join(process.env.HOME, ".cursor", "worktrees", repoName, `task-${taskId}`);
+  join(
+    process.env.HOME,
+    ".cursor",
+    "worktrees",
+    repoName,
+    agentWorktreeLabel(task.branch)
+  );
 
 const baseBranch = task.baseBranch || "main";
 

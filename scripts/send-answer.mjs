@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync, openSync } from "node:fs";
 import { join } from "node:path";
 import { spawn } from "node:child_process";
 import { parseArgs } from "node:util";
-import { TASKS_DIR, LOGS_DIR } from "./paths.mjs";
+import { TASKS_DIR, LOGS_DIR, CONFIG_PATH, agentWorktreeLabel } from "./paths.mjs";
 import { buildResumePrompt } from "./prompt.mjs";
 
 const { values } = parseArgs({
@@ -29,13 +29,29 @@ if (!task.sessionId) {
   process.exit(1);
 }
 
+let defaultModel = "sonnet-4";
+try {
+  const config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
+  if (config.defaultModel) defaultModel = config.defaultModel;
+} catch {}
+
+const model = task.model || defaultModel;
+
 const args = [
   "--print",
   "--yolo",
-  "--resume",
-  task.sessionId,
+  "--worktree",
+  agentWorktreeLabel(task.branch),
+  "--worktree-base",
+  task.baseBranch || "main",
   "--output-format",
   "json",
+  "--workspace",
+  task.repoPath,
+  "--model",
+  model,
+  "--resume",
+  task.sessionId,
   buildResumePrompt(answer),
 ];
 

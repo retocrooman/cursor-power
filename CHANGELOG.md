@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.2 (2026-04-05)
+
+### Bug Fixes
+
+- **worktree:** Git ブランチ名は `<type>/<title>-<id>` のままにし、`agent --worktree` に渡す名前だけ `agentWorktreeLabel` で `/` を `-` に置換（`start-worker` / `send-answer` / `review-pr` / `clean-worktrees` を整合）
+
+### Documentation
+
+- README / DESIGN / task-add で「ブランチ名」と「worktree ラベル」の違いを追記
+
 ## 0.3.1 (2026-04-05)
 
 ### Bug Fixes
@@ -9,6 +19,8 @@
 ### Documentation
 
 - README / DESIGN にブランチ命名の制約を追記
+
+> ブランチ名そのものは 0.3.2 で `<type>/<title>-<id>` に戻し、`--worktree` 用ラベルだけを差し替える方式に変更した。
 
 ## 0.3.0 (2026-04-04)
 
