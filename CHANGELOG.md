@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.3 (2026-04-05)
+
+### Bug Fixes
+
+- **sync-status:** `blocked` / `failed` 状態のタスクでもログから `sessionId` を補完するようにし、`send-answer` の回答中継が止まる問題を修正 (#8)
+- **check-status:** 同期フェーズでも `sessionId` をログから即座に補完
+
 ## 0.3.2 (2026-04-05)
 
 ### Bug Fixes
