@@ -299,6 +299,8 @@ sequenceDiagram
 
 check-status.mjs は同期フェーズ（即座にタスク JSON を読み取ってレスポンス）と非同期フェーズ（sync-status.mjs をバックグラウンドで起動して PID 確認・ログ解析・PR 状態を更新）に分離されている。
 
+同期フェーズでも `sessionId` が未設定のタスクはログから補完を試みるため、`/task-status` 実行時点で即座に `sessionId` を取得できる。非同期フェーズ（sync-status.mjs）でも同様にステータスに関係なく `sessionId` をバックフィルするため、`blocked` や `failed` のタスクでも回答中継（`send-answer.mjs`）に必要な `sessionId` が欠落しない。
+
 ```mermaid
 sequenceDiagram
   participant U as ユーザー
