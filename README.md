@@ -278,7 +278,7 @@ node ~/.cursor-power/scripts/dashboard.mjs
 
 - [DESIGN.md](DESIGN.md) — アーキテクチャ・設計思想
 - [TODO.md](TODO.md) — 実装ロードマップ
-- [CHANGELOG.md](CHANGELOG.md) — 変更履歴
+- [CHANGELOG.md](CHANGELOG.md) — 変更履歴（日付ベース。npm 版は `package.json` を参照）
 
 ## コントリビューション
 

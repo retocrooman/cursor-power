@@ -1,18 +1,20 @@
 # Changelog
 
-## 0.6.4 (2026-04-05)
+セクション見出しは日付（UTC）のみです。パッケージの版は `package.json` と git tag（`v*`）を参照してください。
+
+## 2026-04-05
 
 ### Bug Fixes
 
 - **dashboard:** 閉じた状態の詳細モーダル用オーバーレイが全面でクリックを奪い、カードから詳細を開けなかった問題を修正（`pointer-events`）
 
-## 0.6.3 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
 - **dashboard:** `acceptance_running` 用のシアン系バッジ色を追加し、ステータスバッジを短縮ラベル表示に変更（`wait` / `run` / `hold` / `fix` / `pr` / `acc` / `fail` / `done`）
 
-## 0.6.2 (2026-04-05)
+## 2026-04-05
 
 ### Refactoring
 
@@ -25,7 +27,7 @@
 - commands/task-add.md: ブランチ名生成の説明を更新
 - scripts/paths.mjs: `agentWorktreeLabel` のコメントを更新
 
-## 0.6.1 (2026-04-05)
+## 2026-04-05
 
 ### Bug Fixes
 
@@ -35,7 +37,7 @@
 
 - DESIGN.md: 受け入れ JSON 節に、`buildAcceptancePrompt` とディスク保存の説明を追記
 
-## 0.6.0 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
@@ -55,7 +57,7 @@
 - README.md: Web ダッシュボードセクションにタブ切り替えと issue 一覧の説明を追記
 - commands/dashboard.md: issue 一覧タブの説明を追記
 
-## 0.5.3 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
@@ -69,7 +71,7 @@
 - README.md: Web ダッシュボードセクションにカード詳細モーダルの説明を追記
 - commands/dashboard.md: モーダル機能の説明を追記
 
-## 0.5.2 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
@@ -82,7 +84,7 @@
 - README.md: Web ダッシュボードの説明を更新（10秒間隔、自動同期）
 - commands/dashboard.md: ポーリング時の自動同期について追記
 
-## 0.5.1 (2026-04-05)
+## 2026-04-05
 
 ### BREAKING CHANGES
 
@@ -116,7 +118,7 @@
 - DESIGN.md: ディレクトリ構成に `defaults.mjs` を追加
 - DESIGN.md: `/task-review` フロー図の説明に merge-base ベースの差分取得を追記
 
-## 0.5.0 (2026-04-05)
+## 2026-04-05
 
 ### BREAKING CHANGES
 
@@ -152,7 +154,7 @@
 - README.md: Web ダッシュボードセクション・コマンド表・設定テーブル・ディレクトリ構成を更新
 - commands/task-add.md, task-plan.md, task-promote.md: `--acceptance` オプションの説明を追記
 
-## 0.4.0 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
@@ -164,7 +166,7 @@
 - DESIGN.md: 「pending の自動起動」セクションを追加し、状態遷移図・シーケンス図を更新
 - README.md: 設定テーブルに `autoStartPending` を追記、スクリプト一覧に `drain-pending.mjs` を追加
 
-## 0.3.3 (2026-04-05)
+## 2026-04-05
 
 ### Features
 
@@ -185,7 +187,7 @@
 - DESIGN.md: `/task-check` フロー図の `--resume` 呼び出しに worktree 引数を明記
 - DESIGN.md: リカバリセクションに `send-answer.mjs` が worktree コンテキストを維持する旨を追記
 
-## 0.3.2 (2026-04-05)
+## 2026-04-05
 
 ### Bug Fixes
 
@@ -195,7 +197,7 @@
 
 - README / DESIGN / task-add で「ブランチ名」と「worktree ラベル」の違いを追記
 
-## 0.3.1 (2026-04-05)
+## 2026-04-05
 
 ### Bug Fixes
 
@@ -207,7 +209,7 @@
 
 > ブランチ名そのものは 0.3.2 で `<type>/<title>-<id>` に戻し、`--worktree` 用ラベルだけを差し替える方式に変更した。
 
-## 0.3.0 (2026-04-04)
+## 2026-04-04
 
 ### Features
 
@@ -241,7 +243,7 @@
 
 - **status:** split check-status into sync and async phases (#18)
 
-## 0.2.0 (2026-04-04)
+## 2026-04-04
 
 ### Features
 
