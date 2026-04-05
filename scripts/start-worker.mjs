@@ -31,6 +31,15 @@ try {
 
 const model = task.model || defaultModel;
 
+const missingFields = ["repoPath", "branch", "baseBranch"]
+  .filter((f) => !task[f]);
+if (missingFields.length > 0) {
+  console.error(
+    JSON.stringify({ error: `task is missing required fields: ${missingFields.join(", ")}` }),
+  );
+  process.exit(1);
+}
+
 const fullPrompt = buildInitialPrompt(taskId, task.prompt, { draftPR });
 
 const args = [

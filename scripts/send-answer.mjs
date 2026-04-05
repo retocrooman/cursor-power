@@ -29,6 +29,15 @@ if (!task.sessionId) {
   process.exit(1);
 }
 
+const missingFields = ["repoPath", "branch", "baseBranch"]
+  .filter((f) => !task[f]);
+if (missingFields.length > 0) {
+  console.error(
+    JSON.stringify({ error: `task is missing required fields: ${missingFields.join(", ")}` }),
+  );
+  process.exit(1);
+}
+
 let defaultModel = "sonnet-4";
 try {
   const config = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
@@ -43,7 +52,7 @@ const args = [
   "--worktree",
   agentWorktreeLabel(task.branch),
   "--worktree-base",
-  task.baseBranch || "main",
+  task.baseBranch,
   "--output-format",
   "json",
   "--workspace",

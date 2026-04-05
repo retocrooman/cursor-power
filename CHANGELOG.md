@@ -6,6 +6,13 @@
 
 - **sync-status:** `blocked` / `failed` 状態のタスクでもログから `sessionId` を補完するようにし、`send-answer` の回答中継が止まる問題を修正 (#8)
 - **check-status:** 同期フェーズでも `sessionId` をログから即座に補完
+- **resume:** `send-answer.mjs` の `--worktree-base` フォールバック (`|| "main"`) を削除し、`start-worker.mjs` と統一。再開時に `baseBranch` がそのまま使われるようになった
+- **validation:** `send-answer.mjs` / `start-worker.mjs` の両方に `repoPath` / `branch` / `baseBranch` の必須フィールドチェックを追加。欠落時は明示的なエラーメッセージで終了する
+
+### Documentation
+
+- DESIGN.md: `/task-check` フロー図の `--resume` 呼び出しに worktree 引数を明記
+- DESIGN.md: リカバリセクションに `send-answer.mjs` が worktree コンテキストを維持する旨を追記
 
 ## 0.3.2 (2026-04-05)
 

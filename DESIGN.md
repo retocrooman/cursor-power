@@ -336,7 +336,7 @@ sequenceDiagram
   P->>U: 質問を表示
   U->>P: 「環境変数で。.env.example も作って」
   P->>S: 質問 JSON に回答を書き込み
-  P->>C: agent --print --resume <session_id> "回答: ..."
+  P->>C: agent --print --yolo --worktree ... --workspace /path --model ... --resume <session_id> "回答: ..."
   P->>U: task-c3d4 に回答を送信しました
 ```
 
@@ -508,7 +508,7 @@ sequenceDiagram
 親 Agent tab のセッションが切れても、以下の情報から復帰可能:
 
 1. `~/.cursor-power/tasks/*.json` — 全タスクの状態
-2. 各タスクの `sessionId` — `agent --resume` で子セッション復帰
+2. 各タスクの `sessionId` — `agent --resume` で子セッション復帰（`send-answer.mjs` は初回起動と同じ `--workspace` / `--worktree` / `--worktree-base` / `--model` を付与して再開するため、再開後も正しい worktree で作業が継続される）
 3. worktree の実体 — `~/.cursor/worktrees/` に残っている
 
 新しい Agent tab セッションで `/task-list` を実行すれば、全タスクの現在状態を確認できる。`/task-check` で未回答の質問も拾える。
