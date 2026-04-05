@@ -587,6 +587,8 @@ sequenceDiagram
 | `result` | `"passed"` \| `"failed"` \| null | 全体の結果（受け入れ子が書き込む） |
 | `updatedAt` | string \| null | 最終更新日時（ISO 8601） |
 
+> **E2E 検証ガイド:** 受け入れフローのステータス遷移・検証項目・スモーク手順は [docs/acceptance-e2e.md](docs/acceptance-e2e.md) を参照。
+
 ## 子エージェントへのプロンプト設計
 
 子エージェントに渡すプロンプトは `prompt.mjs` の `buildInitialPrompt()` で生成される。ユーザーが対話で決めた内容をベースに、作業ルール（質問フロー、Git 操作手順、禁止事項）を付加する。`draftPR` 設定が有効な場合は `gh pr create --draft` が指示に含まれる。

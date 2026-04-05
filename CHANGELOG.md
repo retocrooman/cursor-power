@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.1 (2026-04-05)
+
+### Documentation
+
+- **acceptance:** 受け入れフロー E2E 検証ガイド (`docs/acceptance-e2e.md`) を追加。検証項目表・期待ステータス遷移・スモーク手順・トラブルシューティングを文書化
+- DESIGN.md から `docs/acceptance-e2e.md` へのリンクを追記
+
 ## 0.5.0 (2026-04-05)
 
 ### BREAKING CHANGES
