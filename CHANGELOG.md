@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.2 (2026-04-05)
+
+### Features
+
+- **dashboard:** ポーリング時に `sync-status.mjs` を detached で起動し、PID・ログ・PR 状態を自動更新するようにした。`/task-status` を実行しなくてもダッシュボード表示中はタスク状態が追従する
+- **dashboard:** ポーリング間隔を 5秒 → 10秒に変更
+
+### Documentation
+
+- DESIGN.md: ダッシュボード節のシーケンス図・仕様テーブルを更新（10秒ポーリング、sync-status 起動）
+- README.md: Web ダッシュボードの説明を更新（10秒間隔、自動同期）
+- commands/dashboard.md: ポーリング時の自動同期について追記
+
 ## 0.5.1 (2026-04-05)
 
 ### BREAKING CHANGES
