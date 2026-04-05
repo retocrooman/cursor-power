@@ -14,6 +14,10 @@
 
 ## 0.3.3 (2026-04-05)
 
+### Features
+
+- **task-promote:** issue を対話で仕様を詰めてタスクに昇格する `/task-promote` コマンドを追加
+
 ### Bug Fixes
 
 - **sync-status:** `blocked` / `failed` 状態のタスクでもログから `sessionId` を補完するようにし、`send-answer` の回答中継が止まる問題を修正 (#8)
@@ -23,6 +27,8 @@
 
 ### Documentation
 
+- **issue-list:** 一覧から issue をタスク化する際は `/task-promote` または `/task-plan` で対話してから昇格する旨を追記
+- **task-promote:** `/task-promote` の手順・フローを README / DESIGN に追記
 - DESIGN.md: `/task-check` フロー図の `--resume` 呼び出しに worktree 引数を明記
 - DESIGN.md: リカバリセクションに `send-answer.mjs` が worktree コンテキストを維持する旨を追記
 

@@ -104,6 +104,7 @@ flowchart TB
   task-config.md                 # 設定変更
   issue-add.md                   # issue 登録
   issue-list.md                  # issue 一覧
+  task-promote.md                # issue をタスクに昇格
   tutorial.md                    # 対話型ウォークスルー
 
 ~/.cursor-power/                 # グローバル状態管理
